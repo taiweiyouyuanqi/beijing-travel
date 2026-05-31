@@ -23,7 +23,9 @@ logging.basicConfig(
 logger = logging.getLogger("server")
 
 # ==================== 配置 ====================
-COZE_API_TOKEN = os.environ.get("COZE_API_TOKEN") or "sat_wMDwZCob02AIQIOoZWQ1P6vPBlTxKtmF88ayZWI9d6mjsoYvzmnkzi9roMGNRKFx"
+COZE_API_TOKEN = os.environ.get("COZE_API_TOKEN")
+if not COZE_API_TOKEN:
+    raise RuntimeError("COZE_API_TOKEN 未设置，请配置环境变量")
 COZE_BOT_ID = os.environ.get("COZE_BOT_ID", "7644841800452735003")
 COZE_API_BASE = os.environ.get("COZE_API_BASE", "https://api.coze.cn")
 SERVER_PORT = int(os.environ.get("SERVER_PORT", "8000"))
