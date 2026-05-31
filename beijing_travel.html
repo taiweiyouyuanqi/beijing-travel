@@ -1,0 +1,2785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京智慧文旅AI智能体平台 | 智惠首都</title>
+    <meta name="description" content="基于AI智能技术的北京智慧文旅平台，提供智能问答、个性化路线规划、景点讲解、数据可视化等核心功能，助力北京文旅数字化转型。">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bj-blue': {
+                            DEFAULT: '#1E3A5F',
+                            light: '#2D5A8B',
+                            dark: '#0F2744',
+                            50: '#E8EEF4',
+                            100: '#C5D3E5',
+                            200: '#9FB5D3',
+                            300: '#7997C1',
+                            400: '#5379AF',
+                            500: '#2D5A8B',
+                            600: '#1E3A5F',
+                            700: '#0F2744',
+                            800: '#081A2E',
+                            900: '#040D18'
+                        },
+                        'bj-gold': {
+                            DEFAULT: '#C9A962',
+                            light: '#E5D4A1',
+                            dark: '#A68B45'
+                        },
+                        'palace-red': '#B8383B',
+                        'jade': '#2E8B57'
+                    },
+                    fontFamily: {
+                        'serif': ['Noto Serif SC', 'Source Han Serif SC', 'SimSun', 'serif'],
+                        'sans': ['Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px rgba(30, 58, 95, 0.08)',
+                        'hover': '0 8px 30px rgba(30, 58, 95, 0.12)',
+                        'modal': '0 20px 60px rgba(30, 58, 95, 0.2)'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* ==================== 全局样式 ==================== */
+        :root {
+            --primary-blue: #1E3A5F;
+            --accent-gold: #C9A962;
+            --bg-light: #F5F7FA;
+        }
+        
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-light);
+            line-height: 1.6;
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #c5d3e5; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #1E3A5F; }
+        
+        /* ==================== 渐变背景 ==================== */
+        .gradient-hero {
+            background: linear-gradient(135deg, #0F2744 0%, #1E3A5F 25%, #2D5A8B 50%, #1E3A5F 75%, #0F2744 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* 顶部光带 */
+        .top-glow-bar {
+            background: linear-gradient(90deg, transparent 0%, rgba(201, 169, 98, 0.3) 50%, transparent 100%);
+            height: 1px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+        
+        /* ==================== 卡片样式 ==================== */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(30, 58, 95, 0.12);
+        }
+        
+        .gold-border {
+            position: relative;
+        }
+        .gold-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 2px;
+            background: linear-gradient(135deg, #D4AF37, #C9A962, #E5D4A1);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .gold-border:hover::before { opacity: 1; }
+        
+        /* ==================== AI对话动画 ==================== */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #1E3A5F;
+            border-radius: 50%;
+            animation: typingBounce 1.4s ease-in-out infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+        
+        /* ==================== 按钮样式 ==================== */
+        .btn-primary {
+            background: linear-gradient(135deg, #1E3A5F 0%, #2D5A8B 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2D5A8B 0%, #1E3A5F 100%);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
+        }
+        .btn-primary:active { transform: scale(0.98); }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #D4AF37 0%, #C9A962 50%, #E5D4A1 100%);
+            color: #1E3A5F;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(201, 169, 98, 0.4);
+        }
+        
+        /* ==================== 标签样式 ==================== */
+        .tag-pill {
+            background: rgba(30, 58, 95, 0.08);
+            color: #1E3A5F;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .tag-pill:hover { background: rgba(30, 58, 95, 0.15); }
+        .tag-pill.active { background: #1E3A5F; color: white; }
+        
+        /* ==================== 输入框样式 ==================== */
+        .input-modern {
+            background: white;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .input-modern:focus {
+            border-color: #1E3A5F;
+            box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+            outline: none;
+        }
+        
+        /* ==================== 模块切换动画 ==================== */
+        .module-panel { transition: all 0.5s ease; }
+        .module-panel.hidden { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ==================== 图表容器 ==================== */
+        .chart-container { position: relative; height: 320px; }
+        
+        /* ==================== 模态框 ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.9); transition: transform 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        
+        /* ==================== 工具提示 ==================== */
+        .tooltip { position: relative; }
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #1A1A2E;
+            color: white;
+            font-size: 12px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+        .tooltip:hover::after { opacity: 1; visibility: visible; }
+        
+        /* ==================== 时间轴 ==================== */
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #1E3A5F, #2D5A8B);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #C9A962;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 24px;
+            bottom: -16px;
+            width: 2px;
+            background: linear-gradient(to bottom, #C9A962, transparent);
+        }
+        .timeline-item:last-child::after { display: none; }
+        
+        /* ==================== 选项按钮 ==================== */
+        .option-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .option-btn:hover { border-color: #1E3A5F; }
+        .option-btn.selected {
+            border-color: #1E3A5F;
+            background: rgba(30, 58, 95, 0.05);
+            color: #1E3A5F;
+        }
+        
+        /* ==================== 加载动画 ==================== */
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- ==================== 顶部导航栏 ==================== -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
+        <div class="top-glow-bar"></div>
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-bj-blue to-bj-blue-light flex items-center justify-center shadow-md">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-bj-blue font-serif">北京智慧文旅</h1>
+                        <p class="text-xs text-gray-500 -mt-1">AI智能体平台</p>
+                    </div>
+                </div>
+                
+                <!-- 导航菜单 -->
+                <nav class="hidden md:flex items-center gap-8">
+                    <a href="#ai-chat" class="text-gray-600 hover:text-bj-blue transition-colors font-medium flex items-center gap-2">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i>AI问答
+                    </a>
+                    <a href="#route-plan" class="text-gray-600 hover:text-bj-blue transition-colors font-medium flex items-center gap-2">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i>路线规划
+                    </a>
+                    <a href="#attractions" class="text-gray-600 hover:text-bj-blue transition-colors font-medium flex items-center gap-2">
+                        <i data-lucide="landmark" class="w-4 h-4"></i>景点讲解
+                    </a>
+                    <a href="#data-viz" class="text-gray-600 hover:text-bj-blue transition-colors font-medium flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>数据看板
+                    </a>
+                    <a href="#activities" class="text-gray-600 hover:text-bj-blue transition-colors font-medium flex items-center gap-2">
+                        <i data-lucide="calendar-heart" class="w-4 h-4"></i>活动惠民
+                    </a>
+                </nav>
+                
+                <!-- 右侧操作 -->
+                <div class="flex items-center gap-4">
+                    <!-- 实时时间 -->
+                    <div id="current-time" class="hidden md:block text-right">
+                        <div class="text-lg font-mono font-bold text-bj-blue"></div>
+                        <div class="text-xs text-gray-400"></div>
+                    </div>
+                    <button onclick="scrollToTop()" class="p-2 rounded-lg hover:bg-gray-100 transition-colors tooltip" data-tooltip="返回顶部">
+                        <i data-lucide="arrow-up" class="w-5 h-5 text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== Hero区域 ==================== -->
+    <section class="gradient-hero pt-24 pb-16 relative overflow-hidden">
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-20 left-10 w-64 h-64 bg-bj-gold/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-10 right-20 w-96 h-96 bg-bj-blue-light/20 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+            <div class="text-center text-white mb-12 fade-in">
+
+                
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold font-serif mb-4">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-white via-bj-gold-light to-white">
+                        智惠首都 · 慧游京华
+                    </span>
+                </h1>
+                
+                <p class="text-lg md:text-xl text-white/80 max-w-3xl mx-auto mb-8">
+                    融合AI智能技术与北京文旅资源，打造智能问答、个性规划、智慧导览、数据分析四位一体的智慧文旅AI智能体平台，助力首都文旅数字化转型与高质量发展
+                </p>
+                
+                <!-- 核心能力标签 -->
+                <div class="flex flex-wrap justify-center gap-3 mb-10">
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-sm flex items-center gap-2">
+                        <i data-lucide="bot" class="w-4 h-4 text-bj-gold"></i>AI智能问答
+                    </span>
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-sm flex items-center gap-2">
+                        <i data-lucide="route" class="w-4 h-4 text-bj-gold"></i>个性化路线
+                    </span>
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-sm flex items-center gap-2">
+                        <i data-lucide="mic" class="w-4 h-4 text-bj-gold"></i>智能语音讲解
+                    </span>
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-sm flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-bj-gold"></i>大数据分析
+                    </span>
+                </div>
+                
+                <!-- 快捷入口 -->
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="#ai-chat" class="btn-gold px-8 py-3 rounded-xl font-medium flex items-center gap-2 shadow-lg">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>开始智能问答
+                    </a>
+                    <a href="#route-plan" class="px-8 py-3 rounded-xl font-medium border-2 border-white/30 text-white hover:bg-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="compass" class="w-5 h-5"></i>定制游玩路线
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 统计数据 -->
+            <div class="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10">
+                    <div class="text-3xl font-bold text-bj-gold font-mono">25+</div>
+                    <div class="text-sm text-white/70 mt-1">热门景点</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10">
+                    <div class="text-3xl font-bold text-bj-gold font-mono">300+</div>
+                    <div class="text-sm text-white/70 mt-1">问答知识库</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10">
+                    <div class="text-3xl font-bold text-bj-gold font-mono">15+</div>
+                    <div class="text-sm text-white/70 mt-1">主题路线</div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 主内容区域 ==================== -->
+    <main class="max-w-7xl mx-auto px-6 py-12">
+            
+                    <!-- 左侧主功能区: AI智能问答 + AI路线规划 -->
+                <!-- AI智能问答助手 -->
+                <section id="ai-chat" class="bg-white rounded-2xl shadow-soft overflow-hidden scroll-mt-20">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-bj-blue/5 to-transparent">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-bj-blue to-bj-blue-light flex items-center justify-center">
+                                <i data-lucide="bot" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-bj-blue font-serif text-lg">AI智能体</h2>
+                                <p class="text-xs text-gray-500">智能客服 · 多轮对话 · 上下文记忆</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 bg-jade/10 text-jade text-xs rounded-full flex items-center gap-1">
+                                <span class="w-2 h-2 bg-jade rounded-full animate-pulse"></span>在线
+                            </span>
+                            <button onclick="clearChat()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors tooltip" data-tooltip="清空对话">
+                                <i data-lucide="trash-2" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 快捷问题 -->
+                    <div class="px-6 py-3 border-b border-gray-100 flex flex-wrap gap-2 bg-gray-50/50">
+                        <span class="text-xs text-gray-500 mr-2 flex items-center"><i data-lucide="zap" class="w-3 h-3 mr-1"></i>快捷问题：</span>
+                        <button onclick="sendQuickQuestion('故宫怎么预约门票？')" class="tag-pill">故宫预约</button>
+                        <button onclick="sendQuickQuestion('北京三日游最佳路线推荐')" class="tag-pill">三日游路线</button>
+                        <button onclick="sendQuickQuestion('北京特色美食推荐')" class="tag-pill">特色美食</button>
+                        <button onclick="sendQuickQuestion('博物馆之城有哪些博物馆？')" class="tag-pill">博物馆推荐</button>
+                        <button onclick="sendQuickQuestion('长城旅游攻略')" class="tag-pill">长城攻略</button>
+                    </div>
+                    
+                    <!-- 对话区域 -->
+                    <div id="chat-container" class="h-96 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50/50 to-white">
+                        <div class="flex gap-3 fade-in">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-bj-blue to-bj-blue-light flex-shrink-0 flex items-center justify-center">
+                                <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-lg">
+                                <p class="text-gray-700">您好！我是北京智慧文旅AI智能体，欢迎来到智游京华！</p>
+                                <p class="text-gray-700 mt-2">我可以为您提供以下服务：</p>
+                                <ul class="mt-2 space-y-1 text-sm text-gray-600">
+                                    <li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-jade"></i>景点介绍、开放时间、门票信息</li>
+                                    <li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-jade"></i>交通路线、美食推荐、住宿建议</li>
+                                    <li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-jade"></i>游玩攻略、避坑提示、政策咨询</li>
+                                </ul>
+                                <p class="text-gray-700 mt-2">请告诉我您想了解什么？</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 输入区域 -->
+                    <div class="p-4 border-t border-gray-100 bg-white">
+                        <div class="flex gap-3">
+                            <div class="flex-1 relative">
+                                <input type="text" id="chat-input" class="input-modern w-full px-4 py-3 rounded-xl text-sm" placeholder="输入您想咨询的北京文旅问题..." onkeypress="handleChatKeypress(event)">
+                                <i data-lucide="send" class="w-5 h-5 text-bj-blue absolute right-4 top-1/2 -translate-y-1/2 opacity-50"></i>
+                            </div>
+                            <button onclick="sendMessage()" class="btn-primary px-6 py-3 rounded-xl font-medium flex items-center gap-2">
+                                <span>发送</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 个性化路线规划 -->
+                <section id="route-plan" class="bg-white rounded-2xl shadow-soft overflow-hidden scroll-mt-20">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-bj-gold/10 to-transparent">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-bj-gold-dark to-bj-gold flex items-center justify-center">
+                                <i data-lucide="map" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-bj-blue font-serif text-lg">AI个性化路线规划</h2>
+                                <p class="text-xs text-gray-500">智能定制 · 专属行程 · 贴心建议</p>
+                            </div>
+                        </div>
+                        <button onclick="toggleModule('route-plan-module')" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform" id="route-plan-module-icon"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="route-plan-module" class="module-panel">
+                        <div class="p-6 border-b border-gray-100 space-y-5">
+                            <!-- 出行天数 -->
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-bj-gold"></i>出行天数
+                                </label>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <button onclick="selectOption('days', 'one-day', this)" class="days-option option-btn" data-value="one-day">一日游</button>
+                                    <button onclick="selectOption('days', 'two-day', this)" class="days-option option-btn" data-value="two-day">两日游</button>
+                                    <button onclick="selectOption('days', 'three-day', this)" class="days-option option-btn" data-value="three-day">三日游</button>
+                                    <button onclick="selectOption('days', 'weekend', this)" class="days-option option-btn" data-value="weekend">周末游</button>
+                                </div>
+                            </div>
+                            
+                            <!-- 出行人群 -->
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <i data-lucide="users" class="w-4 h-4 text-bj-gold"></i>出行人群
+                                </label>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <button onclick="selectOption('crowd', 'family', this)" class="crowd-option option-btn" data-value="family">亲子家庭</button>
+                                    <button onclick="selectOption('crowd', 'student', this)" class="crowd-option option-btn" data-value="student">学生群体</button>
+                                    <button onclick="selectOption('crowd', 'couple', this)" class="crowd-option option-btn" data-value="couple">情侣出行</button>
+                                    <button onclick="selectOption('crowd', 'elder', this)" class="crowd-option option-btn" data-value="elder">老年康养</button>
+                                </div>
+                            </div>
+                            
+                            <!-- 游玩偏好 -->
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <i data-lucide="heart" class="w-4 h-4 text-bj-gold"></i>游玩偏好
+                                </label>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <button onclick="selectOption('preference', 'heritage', this)" class="preference-option option-btn" data-value="heritage">人文古迹</button>
+                                    <button onclick="selectOption('preference', 'nature', this)" class="preference-option option-btn" data-value="nature">自然风景</button>
+                                    <button onclick="selectOption('preference', 'trending', this)" class="preference-option option-btn" data-value="trending">网红打卡</button>
+                                    <button onclick="selectOption('preference', 'museum', this)" class="preference-option option-btn" data-value="museum">博物馆之旅</button>
+                                    <button onclick="selectOption('preference', 'night', this)" class="preference-option option-btn" data-value="night">演艺夜游</button>
+                                </div>
+                            </div>
+                            
+                            <!-- 预算选择 -->
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <i data-lucide="wallet" class="w-4 h-4 text-bj-gold"></i>预算偏好
+                                </label>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <button onclick="selectOption('budget', 'economy', this)" class="budget-option option-btn" data-value="economy">经济实惠</button>
+                                    <button onclick="selectOption('budget', 'comfort', this)" class="budget-option option-btn" data-value="comfort">品质舒适</button>
+                                    <button onclick="selectOption('budget', 'luxury', this)" class="budget-option option-btn" data-value="luxury">高端定制</button>
+                                </div>
+                            </div>
+                            
+                            <!-- 已选景点 -->
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <i data-lucide="map-pin" class="w-4 h-4 text-bj-gold"></i>已选景点（点击景点卡片"加入路线"添加）
+                                </label>
+                                <div id="selected-spots" class="space-y-1.5">
+                                    <p class="text-xs text-gray-400 text-center py-2">尚未选择景点，请在景点列表中点击"加入路线"</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50/50">
+                            <button onclick="generateRoute()" class="btn-gold w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2">
+                                <i data-lucide="sparkles" class="w-5 h-5"></i><span>AI智能生成专属路线</span>
+                            </button>
+                        </div>
+                        
+                        <div id="route-result" class="hidden">
+                            <div class="p-6 border-t border-gray-100">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-bold text-bj-blue font-serif">为您生成的专属路线</h3>
+                                    <button onclick="exportRoute()" class="text-sm text-bj-blue hover:text-bj-blue-light flex items-center gap-1">
+                                        <i data-lucide="download" class="w-4 h-4"></i>导出路线
+                                    </button>
+                                </div>
+                                <div id="route-content" class="space-y-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- 右侧辅助区: 数据看板+热门景点+实用工具 -->
+                <section class="bg-white rounded-2xl shadow-soft overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                                <i data-lucide="flame" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-bj-blue font-serif text-lg">热门景点TOP10</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="hot-ranking" class="p-4 space-y-3"></div>
+                </section>
+
+                <section class="bg-white rounded-2xl shadow-soft overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h2 class="font-bold text-bj-blue font-serif text-lg flex items-center gap-2">
+                            <i data-lucide="wrench" class="w-5 h-5 text-bj-gold"></i>实用工具
+                        </h2>
+                    </div>
+                    <div class="p-4 grid grid-cols-2 gap-3">
+                        <button onclick="showTraffic()" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                                <i data-lucide="car" class="w-5 h-5 text-emerald-600"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-medium text-gray-800">交通指南</div>
+                                <div class="text-xs text-gray-500">出行路线规划</div>
+                            </div>
+                        </button>
+                        <button onclick="showEmergency()" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                                <i data-lucide="phone" class="w-5 h-5 text-red-600"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-medium text-gray-800">紧急电话</div>
+                                <div class="text-xs text-gray-500">常用应急联系</div>
+                            </div>
+                        </button>
+                        <button onclick="showFAQ()" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div class="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                                <i data-lucide="help-circle" class="w-5 h-5 text-violet-600"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-medium text-gray-800">常见问题</div>
+                                <div class="text-xs text-gray-500">FAQ帮助中心</div>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+
+                <section id="data-viz" class="bg-white rounded-2xl shadow-soft overflow-hidden scroll-mt-20">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-jade/5 to-transparent">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-jade to-emerald-600 flex items-center justify-center">
+                                <i data-lucide="bar-chart-3" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-bj-blue font-serif text-lg">文旅大数据看板</h2>
+                                <p class="text-xs text-gray-500">实时数据 · 热度分析 · 趋势洞察</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <div class="flex gap-2">
+                            <button onclick="switchChart('heatmap', this)" class="chart-tab flex-1 px-3 py-2 rounded-lg bg-bj-blue text-white text-sm transition-all">热度排行</button>
+                            <button onclick="switchChart('type', this)" class="chart-tab flex-1 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200 transition-all">类型分布</button>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                        
+                        </div>
+                    </div>
+                </section>
+
+                </div>  <!-- 工具行容器结束 -->
+            <!-- 景点智能讲解（满宽） -->
+                <section id="attractions" class="bg-white rounded-2xl shadow-soft overflow-hidden scroll-mt-20">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-palace-red/5 to-transparent">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-palace-red to-red-700 flex items-center justify-center">
+                                <i data-lucide="landmark" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-bj-blue font-serif text-lg">北京景点智能讲解</h2>
+                                <p class="text-xs text-gray-500">语音讲解 · 历史文化 · 游玩攻略</p>
+                            </div>
+                        </div>
+                        <button onclick="toggleModule('attractions-module')" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform" id="attractions-module-icon"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="attractions-module" class="module-panel">
+                        <div class="p-6">
+                            <div class="flex flex-wrap gap-2 mb-6">
+                                <button onclick="filterAttractions('all', this)" class="attraction-filter px-3 py-1.5 rounded-lg bg-bj-blue text-white text-sm transition-all" data-filter="all">全部景点</button>
+                                <button onclick="filterAttractions('heritage', this)" class="attraction-filter px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200 transition-all" data-filter="heritage">人文古迹</button>
+                                <button onclick="filterAttractions('museum', this)" class="attraction-filter px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200 transition-all" data-filter="museum">博物馆</button>
+                                <button onclick="filterAttractions('nature', this)" class="attraction-filter px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200 transition-all" data-filter="nature">自然风光</button>
+                                <button onclick="filterAttractions('modern', this)" class="attraction-filter px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200 transition-all" data-filter="modern">现代地标</button>
+                            </div>
+                            
+                            <div id="attractions-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+                        </div>
+                    </div>
+                </section>
+
+        
+        <!-- 文旅活动与惠民服务 -->
+        <section id="activities" class="mt-12 bg-white rounded-2xl shadow-soft overflow-hidden scroll-mt-20">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <i data-lucide="calendar-heart" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-bj-blue font-serif text-lg">文旅活动与惠民服务</h2>
+                        <p class="text-xs text-gray-500">精彩活动 · 免费场馆 · 惠民政策</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded-full flex items-center gap-1">
+                    <i data-lucide="sparkles" class="w-3 h-3"></i>近期热门
+                </span>
+            </div>
+            
+            <div class="px-6 py-4 border-b border-gray-100 flex flex-wrap gap-2">
+                <button onclick="filterActivities('all', this)" class="activity-filter px-4 py-2 rounded-lg bg-bj-blue text-white text-sm transition-all" data-filter="all">全部活动</button>
+                <button onclick="filterActivities('show', this)" class="activity-filter px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200 transition-all" data-filter="show">戏剧演出</button>
+                <button onclick="filterActivities('exhibition', this)" class="activity-filter px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200 transition-all" data-filter="exhibition">展览讲座</button>
+                <button onclick="filterActivities('festival', this)" class="activity-filter px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-sm hover:bg-gray-200 transition-all" data-filter="festival">节庆活动</button>
+                <button onclick="filterActivities('free', this)" class="activity-filter px-4 py-2 rounded-lg bg-jade/10 text-jade text-sm hover:bg-jade/20 transition-all" data-filter="free">
+                    <i data-lucide="gift" class="w-3 h-3 inline mr-1"></i>免费场馆
+                </button>
+            </div>
+            
+            <div id="activities-grid" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+    </main>
+
+    <!-- ==================== 底部信息栏 ==================== -->
+    <footer class="bg-bj-blue-dark text-white mt-12">
+        <div class="max-w-7xl mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+                            <i data-lucide="sparkles" class="w-7 h-7 text-bj-gold"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold font-serif">北京智慧文旅AI智能体平台</h3>
+                            <p class="text-sm text-white/60">Smart Beijing Cultural Tourism AI Platform</p>
+                        </div>
+                    </div>
+                    <p class="text-white/70 text-sm leading-relaxed">
+                        本平台基于北京市2026-2027科技赋能文旅政策打造，融合人工智能与大数据技术，
+                        为游客提供智能问答、个性化路线规划、景点智能讲解等一站式智慧文旅服务，
+                        助力北京"博物馆之城、演艺之都、文旅新消费"建设。
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium mb-4 text-bj-gold">快速链接</h4>
+                    <ul class="space-y-2 text-sm text-white/70">
+                        <li><a href="#ai-chat" class="hover:text-bj-gold transition-colors">AI智能问答</a></li>
+                        <li><a href="#route-plan" class="hover:text-bj-gold transition-colors">路线规划</a></li>
+                        <li><a href="#attractions" class="hover:text-bj-gold transition-colors">景点讲解</a></li>
+                        <li><a href="#data-viz" class="hover:text-bj-gold transition-colors">数据看板</a></li>
+                        <li><a href="#activities" class="hover:text-bj-gold transition-colors">活动惠民</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium mb-4 text-bj-gold">政策依据</h4>
+                    <ul class="space-y-2 text-sm text-white/70">
+                        <li class="flex items-start gap-2"><i data-lucide="file-check" class="w-4 h-4 mt-0.5 text-bj-gold/70"></i><span>北京市"十四五"文旅融合发展规划</span></li>
+                        <li class="flex items-start gap-2"><i data-lucide="file-check" class="w-4 h-4 mt-0.5 text-bj-gold/70"></i><span>2026-2027科技赋能文旅政策</span></li>
+                        <li class="flex items-start gap-2"><i data-lucide="file-check" class="w-4 h-4 mt-0.5 text-bj-gold/70"></i><span>北京博物馆之城建设方案</span></li>
+                        <li class="flex items-start gap-2"><i data-lucide="file-check" class="w-4 h-4 mt-0.5 text-bj-gold/70"></i><span>首都文旅新消费培育计划</span></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-white/50">© 2026 北京智慧文旅AI智能体平台 | 智惠首都数字化服务</p>
+                <div class="flex items-center gap-4 text-sm text-white/50">
+                    
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 通用模态框 -->
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content bg-white rounded-2xl shadow-modal max-w-lg w-full mx-4 max-h-[80vh] overflow-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 id="modal-title" class="text-xl font-bold text-bj-blue font-serif"></h3>
+                    <button onclick="closeModal()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i data-lucide="x" class="w-5 h-5 text-gray-500"></i>
+                    </button>
+                </div>
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JavaScript ==================== -->
+    <script>
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            initAttractions();
+            initActivities();
+            initHotRanking();
+            initChart('heatmap');
+            initScrollSpy();
+            startRealtimeUpdates(); // 启动实时数据更新
+        });
+        
+        // ==================== 全局变量 ====================
+        // ==================== 后端代理服务配置 ====================
+        // API Token 存储在服务端，前端不暴露敏感信息
+        const API_BASE_URL = ''; // 留空表示同域，可设为完整地址如 http://localhost:8000
+        const COZE_USER_ID = 'travel_user_' + (localStorage.getItem('travel_user_id') || (() => {
+            const id = Date.now().toString(36);
+            localStorage.setItem('travel_user_id', id);
+            return id;
+        })());
+        
+        let chatHistory = [];
+        let selectedOptions = { days: null, crowd: null, preference: null, budget: null };
+        let currentAttraction = null;
+        let currentChartType = 'heatmap';
+        let selectedSpots = []; // 用户选择的景点列表
+        let currentAudioGuide = null; // 当前播放的讲解内容
+        let speechSynth = window.speechSynthesis;
+        let currentUtterance = null;
+        
+        // ==================== 实时数据更新系统 ====================
+        
+        function startRealtimeUpdates() {
+            // 实时更新景点热度
+            setInterval(() => {
+                updateAttractionHeat();
+            }, 10000); // 每10秒更新一次
+            
+            // 实时更新天气信息
+            updateWeatherInfo();
+            setInterval(() => {
+                updateWeatherInfo();
+            }, 60000); // 每分钟更新天气
+            
+            // 实时更新时间显示
+            updateCurrentTime();
+            setInterval(() => {
+                updateCurrentTime();
+            }, 1000); // 每秒更新时间
+        }
+        
+        function updateAttractionHeat() {
+            // 热度数据随机波动
+            hotRankingData.forEach(item => {
+                const change = (Math.random() - 0.5) * 5;
+                item.heat = Math.max(60, Math.min(100, item.heat + change));
+            });
+            
+            // 重新渲染热度排行 - 只显示景点名称
+            const container = document.getElementById('hot-ranking');
+            if (container) {
+                container.innerHTML = hotRankingData.map((item, index) => `
+                    <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="showHotRankingDetail('${item.name}')">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${index < 3 ? 'bg-bj-gold/20 text-bj-gold-dark' : 'bg-gray-100 text-gray-600'}">${index + 1}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-gray-800 truncate">${item.name}</div>
+                        </div>
+                    </div>`).join('');
+            }
+        }
+        
+        async function updateWeatherInfo() {
+            try {
+                const weatherPrompt = `请生成北京当前（2026年5月）的实时天气预报数据，包括：温度、体感温度、天气状况（晴天/多云/小雨等）、湿度、空气质量指数(AQI)和风向风力。请以JSON格式返回，不要加任何额外说明，格式：{"temp":28,"feels_like":30,"desc":"晴","icon":"☀️","humidity":45,"aqi":62,"wind":"南风3级"}`;
+                
+                const reply = await callDoubaoAPI(
+                    [{ role: 'user', content: weatherPrompt }],
+                    '你是一个天气数据生成助手，根据北京2026年5月的典型天气特点，生成合理的实时天气数据。'
+                );
+                
+                let weather;
+                try {
+                    weather = JSON.parse(reply);
+                } catch {
+                    // 如果AI返回的不是纯JSON，尝试提取
+                    const jsonMatch = reply.match(/\{[\s\S]*\}/);
+                    weather = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+                }
+                
+                if (!weather) throw new Error('解析失败');
+                
+                const weatherEl = document.getElementById('weather-info');
+                if (weatherEl) {
+                    weatherEl.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">${weather.icon || '☀️'}</span>
+                            <div>
+                                <div class="text-xl font-bold text-gray-800">${weather.temp}°C</div>
+                                <div class="text-xs text-gray-500">${weather.desc}</div>
+                            </div>
+                            <div class="ml-auto text-right">
+                                <div class="text-xs ${weather.aqi <= 50 ? 'text-green-500' : weather.aqi <= 100 ? 'text-yellow-500' : 'text-red-500'}">AQI ${weather.aqi}</div>
+                                <div class="text-xs text-gray-400">空气质量${weather.aqi <= 50 ? '优' : weather.aqi <= 100 ? '良' : '一般'}</div>
+                            </div>
+                        </div>
+                        <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                            <span>🌡️ 体感 ${weather.feels_like || weather.temp}°C</span>
+                            <span>💧 湿度 ${weather.humidity || 50}%</span>
+                            <span>🌬️ ${weather.wind || '南风2级'}</span>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400 text-center">
+                            更新于 ${new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})}
+                        </div>`;
+                }
+            } catch (error) {
+                console.log('天气API调用失败，使用备用数据');
+                updateLocalWeather();
+            }
+        }
+        
+        function updateLocalWeather() {
+            const weatherData = [
+                { temp: Math.floor(Math.random() * 10) + 20, desc: '晴', icon: '☀️', aqi: Math.floor(Math.random() * 50) + 30 },
+                { temp: Math.floor(Math.random() * 8) + 18, desc: '多云', icon: '⛅', aqi: Math.floor(Math.random() * 40) + 40 },
+                { temp: Math.floor(Math.random() * 6) + 22, desc: '晴间多云', icon: '🌤️', aqi: Math.floor(Math.random() * 30) + 35 }
+            ];
+            
+            const weather = weatherData[Math.floor(Math.random() * weatherData.length)];
+            const weatherEl = document.getElementById('weather-info');
+            
+            if (weatherEl) {
+                weatherEl.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">${weather.icon}</span>
+                        <div>
+                            <div class="text-xl font-bold text-gray-800">${weather.temp}°C</div>
+                            <div class="text-xs text-gray-500">${weather.desc}</div>
+                        </div>
+                        <div class="ml-auto text-right">
+                            <div class="text-xs ${weather.aqi <= 50 ? 'text-green-500' : weather.aqi <= 100 ? 'text-yellow-500' : 'text-red-500'}">AQI ${weather.aqi}</div>
+                            <div class="text-xs text-gray-400">空气质量良</div>
+                        </div>
+                    </div>
+                    <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                        <span>🌡️ 体感 ${weather.temp + Math.floor(Math.random() * 3)}°C</span>
+                        <span>💧 湿度 ${Math.floor(Math.random() * 30) + 40}%</span>
+                    </div>`;
+            }
+        }
+        
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+            const dateStr = now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
+            
+            const timeEl = document.getElementById('current-time');
+            if (timeEl) {
+                timeEl.innerHTML = `
+                    <div class="text-2xl font-mono font-bold text-bj-blue">${timeStr}</div>
+                    <div class="text-xs text-gray-500">${dateStr}</div>
+                `;
+            }
+        }
+        
+        // ==================== AI智能问答系统 ====================
+        
+        function handleChatKeypress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        async function callDoubaoAPI(messages, systemPrompt = '') {
+            // 通过后端代理服务调用扣子智能体，保护 API Token 安全
+            const resp = await fetch(`${API_BASE_URL}/api/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: messages,
+                    user_id: COZE_USER_ID
+                })
+            });
+
+            if (!resp.ok) {
+                const errData = await resp.json().catch(() => ({}));
+                throw new Error(errData.detail || `请求失败 (${resp.status})`);
+            }
+
+            const data = await resp.json();
+            return data.content;
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            addChatMessage(message, 'user');
+            chatHistory.push({ role: 'user', content: message });
+            input.value = '';
+            
+            showTypingIndicator();
+            
+            try {
+                const reply = await callDoubaoAPI(chatHistory.slice(-20));
+                removeTypingIndicator();
+                addChatMessage(reply, 'assistant');
+                chatHistory.push({ role: 'assistant', content: reply });
+            } catch (error) {
+                console.error('API调用失败:', error);
+                removeTypingIndicator();
+                addChatMessage('抱歉，服务暂时不可用，请稍后再试。', 'assistant');
+            }
+        }
+        
+        function sendQuickQuestion(question) {
+            document.getElementById('chat-input').value = question;
+            sendMessage();
+        }
+        
+        function addChatMessage(content, role) {
+            const container = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-3 fade-in';
+            
+            if (role === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex-1"></div>
+                    <div class="bg-gradient-to-br from-bj-blue to-bj-blue-light text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-lg shadow-sm">
+                        <p class="text-sm">${escapeHtml(content)}</p>
+                    </div>`;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-bj-gold to-bj-gold-dark flex-shrink-0 flex items-center justify-center">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-lg">
+                        <p class="text-sm text-gray-700 whitespace-pre-wrap">${formatAIResponse(content)}</p>
+                    </div>`;
+            }
+            
+            container.appendChild(messageDiv);
+            lucide.createIcons();
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            const container = document.getElementById('chat-container');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'flex gap-3 fade-in';
+            typingDiv.innerHTML = `
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-bj-gold to-bj-gold-dark flex-shrink-0 flex items-center justify-center">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
+                </div>`;
+            container.appendChild(typingDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+        
+        function clearChat() {
+            const container = document.getElementById('chat-container');
+            container.innerHTML = `
+                <div class="flex gap-3 fade-in">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-bj-blue to-bj-blue-light flex-shrink-0 flex items-center justify-center">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-lg">
+                        <p class="text-gray-700">对话已清空，请继续提问！</p>
+                    </div>
+                </div>`;
+            chatHistory = [];
+            lucide.createIcons();
+        }
+        
+        // ==================== AI智能体增强版 ====================
+        
+        // 扩展知识库
+        const knowledgeTopics = {
+            '景点': ['故宫', '长城', '颐和园', '天坛', '北海公园', '圆明园', '天安门', '鸟巢', '水立方', '什刹海', '南锣鼓巷', '798艺术区', '香山', '北海'],
+            '博物馆': ['国家博物馆', '首都博物馆', '中国美术馆', '中国科技馆', '北京自然博物馆', '中国人民革命军事博物馆', '中国航空博物馆', '北京天文馆'],
+            '活动': ['音乐节', '戏剧', '演唱会', '展览', '庙会', '灯会', '文化节', '冰雪节'],
+            '区域': ['东城', '西城', '朝阳', '海淀', '丰台', '石景山', '通州', '顺义', '大兴', '昌平', '房山', '门头沟', '平谷', '怀柔', '密云', '延庆']
+        };
+        
+        // 景点详情数据库
+        const attractionsDB = {
+            '故宫': { info: '开放时间：08:30-17:00 | 门票：60元 | 地址：东城区景山前街4号', tips: '提前7天预约，周一闭馆，建议从午门进、神武门出' },
+            '长城': { info: '八达岭：40元 | 慕田峪：45元 | 司马台：40元', tips: '春秋最佳，建议早起，错峰出行，穿舒适运动鞋' },
+            '颐和园': { info: '开放时间：06:00-20:00 | 门票：30元 | 地址：海淀区新建宫门路19号', tips: '北宫门进、东宫门出，昆明湖是必打卡点' },
+            '天坛': { info: '开放时间：06:00-21:00 | 门票：34元 | 地址：东城区天坛东里甲1号', tips: '建议早上去祈年殿，光线最佳' },
+            '北海公园': { info: '开放时间：06:00-21:00 | 门票：10元 | 地址：西城区文津街1号', tips: '白塔是标志性建筑，傍晚拍照最佳' },
+            '圆明园': { info: '开放时间：07:00-21:00 | 门票：10元 | 地址：海淀区清华西路28号', tips: '西洋楼遗址是必看，保留历史遗迹' },
+            '鸟巢': { info: '开放时间：09:00-21:00 | 门票：100元 | 地址：朝阳区国家体育场南路1号', tips: '夜景更美，附近有水立方可联游' },
+            '水立方': { info: '开放时间：09:00-21:00 | 门票：30元 | 地址：朝阳区天辰东路11号', tips: '可参观蓝色泡泡外观，晚间灯光秀' },
+            '南锣鼓巷': { info: '全天开放 | 门票：免费 | 地址：东城区南锣鼓巷', tips: '汇聚老北京小吃和文创小店，适合傍晚逛' },
+            '什刹海': { info: '全天开放 | 门票：免费 | 地址：西城区地安门西大街49号', tips: '后海酒吧街，夜生活丰富，烟袋斜街相连' },
+            '798艺术区': { info: '开放时间：10:00-18:00 | 门票：免费 | 地址：朝阳区酒仙桥路4号', tips: '当代艺术聚集地，适合文青打卡' },
+            '香山': { info: '开放时间：06:00-19:00 | 门票：10元 | 地址：海淀区香山公园', tips: '秋季红叶最佳观赏期，十月中旬最美' }
+        };
+        
+        // 美食推荐数据库
+        const foodDB = {
+            '烤鸭': ['全聚德', '大董', '四季民福', '便宜坊'],
+            '涮羊肉': ['东来顺', '南门涮肉', '聚宝源'],
+            '炸酱面': ['海碗居', '方砖厂69号', '一碗居'],
+            '小吃': ['护国寺小吃', '隆福寺小吃', '豆汁焦圈'],
+            '网红': ['三里屯', '簋街', '五道口', '南锣鼓巷']
+        };
+        
+        // 智能问答引擎
+        function generateAIResponse(question) {
+            const q = question.toLowerCase();
+            const ctx = getContextSummary();
+            
+            // 1. 故宫相关
+            if (q.includes('故宫') || q.includes('紫禁城')) {
+                if (q.includes('预约') || q.includes('门票')) return generatePalaceTicketResponse();
+                if (q.includes('攻略') || q.includes('路线') || q.includes('怎么玩')) return generatePalaceRouteResponse();
+                if (q.includes('历史') || q.includes('介绍')) return generatePalaceIntroResponse();
+                return generatePalaceGeneralResponse();
+            }
+            
+            // 2. 长城相关
+            if (q.includes('长城')) {
+                if (q.includes('八达岭')) return generateBadalingResponse();
+                if (q.includes('慕田峪')) return generateMutianyuResponse();
+                if (q.includes('司马台')) return generateSimataiResponse();
+                if (q.includes('交通') || q.includes('怎么去')) return generateGreatWallTransportResponse();
+                return generateGreatWallGeneralResponse();
+            }
+            
+            // 3. 颐和园相关
+            if (q.includes('颐和园')) {
+                if (q.includes('门票') || q.includes('开放时间')) return generateSummerPalaceInfoResponse();
+                if (q.includes('路线') || q.includes('攻略')) return generateSummerPalaceRouteResponse();
+                return generateSummerPalaceGeneralResponse();
+            }
+            
+            // 4. 博物馆相关
+            if (q.includes('博物馆') || q.includes('馆')) {
+                if (q.includes('免费')) return generateFreeMuseumResponse();
+                if (q.includes('预约')) return generateMuseumBookingResponse();
+                return generateMuseumGeneralResponse();
+            }
+            
+            // 5. 美食相关
+            if (q.includes('美食') || q.includes('吃') || q.includes('餐厅') || q.includes('小吃')) {
+                if (q.includes('烤鸭')) return generatePekingDuckResponse();
+                if (q.includes('特色') || q.includes('推荐')) return generateFoodRecommendResponse();
+                return generateFoodGeneralResponse();
+            }
+            
+            // 6. 路线/行程相关
+            if (q.includes('路线') || q.includes('行程') || q.includes('攻略') || q.includes('规划')) {
+                if (q.includes('一日') || q.includes('一天')) return generateOneDayRouteResponse();
+                if (q.includes('三日') || q.includes('三天')) return generateThreeDayRouteResponse();
+                return generateRouteSuggestResponse();
+            }
+            
+            // 7. 交通相关
+            if (q.includes('交通') || q.includes('地铁') || q.includes('公交') || q.includes('怎么去') || q.includes('坐')) {
+                return generateTransportResponse(q);
+            }
+            
+            // 8. 住宿相关
+            if (q.includes('住宿') || q.includes('酒店') || q.includes('住')) {
+                return generateHotelResponse();
+            }
+            
+            // 9. 天气相关
+            if (q.includes('天气')) {
+                return generateWeatherResponse();
+            }
+            
+            // 10. 季节/时间相关
+            if (q.includes('什么时候') || q.includes('几月') || q.includes('最佳')) {
+                if (q.includes('红叶') || q.includes('秋天') || q.includes('秋季')) return generateAutumnResponse();
+                if (q.includes('雪') || q.includes('冬天') || q.includes('冬季')) return generateWinterResponse();
+                return generateBestTimeResponse();
+            }
+            
+            // 11. 免费相关
+            if (q.includes('免费')) {
+                return generateFreeSpotsResponse();
+            }
+            
+            // 12. 儿童/亲子相关
+            if (q.includes('亲子') || q.includes('小孩') || q.includes('儿童') || q.includes('小朋友')) {
+                return generateFamilyResponse();
+            }
+            
+            // 13. 购物相关
+            if (q.includes('购物') || q.includes('买') || q.includes('逛街')) {
+                return generateShoppingResponse();
+            }
+            
+            // 14. 夜景相关
+            if (q.includes('夜景') || q.includes('晚上') || q.includes('夜')) {
+                return generateNightViewResponse();
+            }
+            
+            // 15. 问好/闲聊
+            if (q.includes('你好') || q.includes('hi') || q.includes('hello') || q.includes('在吗')) {
+                return generateGreetingResponse();
+            }
+            
+            // 16. 感谢
+            if (q.includes('谢谢') || q.includes('感谢')) {
+                return '😊 不客气！很高兴能帮到您～\n\n还有什么想了解的北京文旅信息吗？我随时为您服务！';
+            }
+            
+            // 17. 上下文理解 - 如果之前提到过某个地点
+            if (ctx && ctx.lastTopic) {
+                if (q.includes('还有') || q.includes('其他') || q.includes('推荐')) {
+                    return generateMoreLikeResponse(ctx.lastTopic);
+                }
+            }
+            
+            // 默认回复 - 智能理解意图
+            return generateSmartFallback(question);
+        }
+        
+        // 获取上下文摘要
+        function getContextSummary() {
+            const lastMsgs = chatHistory.slice(-4);
+            let lastTopic = null;
+            lastMsgs.forEach(msg => {
+                if (msg.content.includes('故宫')) lastTopic = '故宫';
+                else if (msg.content.includes('长城')) lastTopic = '长城';
+                else if (msg.content.includes('博物馆')) lastTopic = '博物馆';
+                else if (msg.content.includes('美食')) lastTopic = '美食';
+            });
+            return { lastTopic };
+        }
+        
+        // 生成各类型回复
+        function generatePalaceTicketResponse() {
+            return `🏯 **故宫博物院门票预约指南**
+
+📅 **预约时间**：提前7天开放预约，每天20:00放票
+
+🎫 **门票价格**：
+• 旺季（4月-10月）：60元/人
+• 淡季（11月-3月）：40元/人
+• 珍宝馆：10元/人
+• 钟表馆：10元/人
+
+📱 **预约方式**：
+1️⃣ 微信公众号「故宫博物院」
+2️⃣ 官网 www.dpm.org.cn
+3️⃣ 美团/携程合作平台
+
+⚠️ **注意事项**：
+• 务必携带身份证原件入园
+• 周一闭馆（法定节假日除外）
+• 旺季建议提前3-5天预约
+
+需要我帮您规划故宫游览路线吗？`;
+        }
+        
+        function generatePalaceRouteResponse() {
+            return `🗺️ **故宫深度游览攻略**（建议3-4小时）
+
+**经典路线**：
+1️⃣ **午门** - 从这里进入紫禁城
+2️⃣ **太和门** - 皇帝举行大典之地
+3️⃣ **太和殿** - 金銮殿，故宫核心
+4️⃣ **中和殿、保和殿** - 皇帝办公之所
+5️⃣ **乾清宫** - 皇帝处理政务
+6️⃣ **交泰殿、坤宁宫** - 皇后寝宫
+7️⃣ **御花园** - 皇家园林艺术
+8️⃣ **神武门** - 从这里离开
+
+🎧 **建议**：租用讲解器（20元）或预约人工讲解
+
+📸 **打卡点位**：太和殿屋顶、乾清宫门前的龙椅、御花园假山
+
+需要了解门票预约信息吗？`;
+        }
+        
+        function generatePalaceIntroResponse() {
+            return `🏯 **故宫博物院简介**
+
+故宫又名紫禁城，是明清两代皇家宫殿，也是世界上现存规模最大、保存最为完整的木质结构古建筑群。
+
+📊 **基本信息**：
+• 建造时间：明永乐四年至十八年（1406-1420）
+• 占地面积：约72万平方米
+• 建筑面积：约15万平方米
+• 殿宇数量：8700多间
+• 地位：世界文化遗产、5A级景区
+
+🏛️ **主要建筑**：
+• 外朝：太和殿、中和殿、保和殿
+• 内廷：乾清宫、交泰殿、坤宁宫
+• 御花园：假山、亭台楼阁
+
+🎫 **参观信息**：
+• 建议游览时长：3-4小时
+• 最佳季节：春秋两季
+
+需要我帮您预约门票或规划路线吗？`;
+        }
+        
+        function generatePalaceGeneralResponse() {
+            return `🏯 **故宫博物院** — 世界五大宫之首
+
+故宫是来北京必打卡的景点！这里曾是明清两代24位皇帝的皇宫，至今已有近600年历史。
+
+📌 **游览信息**：
+• 地址：东城区景山前街4号
+• 开放：08:30-17:00（16:10停止入园）
+• 门票：60元/人
+• 建议时长：3-4小时
+
+🎯 **推荐玩法**：
+• 深度游：太和殿→乾清宫→御花园→珍宝馆
+• 拍照点：景山公园俯瞰故宫全景
+• 文化游：参观钟表馆、珍宝馆文物
+
+您想了解门票预约、游览路线还是历史文化？`;
+        }
+        
+        function generateBadalingResponse() {
+            return `🧗 **八达岭长城游览指南**
+
+📍 **基本信息**：
+• 地址：延庆区八达岭镇
+• 开放：旺季 06:30-19:00
+• 门票：40元/人（淡季35元）
+• 缆车：140元/人（单程）
+
+🚌 **交通方式**：
+• 🚌 公交：德胜门乘坐877路（约1.5小时，12元）
+• 🚄 市郊铁路：S2线到八达岭站
+• 🚗 自驾：京藏高速八达岭出口
+
+💡 **游览建议**：
+• 建议早上去，避开人流高峰
+• 登城口有南北两处，推荐从北八楼登顶
+• 春秋季节天气最佳
+• 穿舒适运动鞋，带足水和零食
+
+需要我帮您规划包含长城的行程吗？`;
+        }
+        
+        function generateMutianyuResponse() {
+            return `🧗 **慕田峪长城游览指南**
+
+⭐ **特色亮点**：
+• 景色秀丽，视野开阔
+• 游客相对较少，体验更佳
+• 正关台景观独一无二
+• 设施完善，适合家庭游
+
+💰 **门票价格**：
+• 成人：45元/人
+• 缆车：140元/人（单程）
+• 索道/滑道：100元/人
+
+🚌 **交通**：
+• 推荐报一日游或包车前往
+• 或乘坐916路到怀柔，换乘小巴
+
+💡 **建议**：乘缆车至14号敌楼，游览至20号敌楼返回，秋季红叶配长城绝美！`;
+        }
+        
+        function generateSimataiResponse() {
+            return `🧗 **司马台长城游览指南**
+
+⭐ **特色亮点**：
+• 保留明长城原貌最多
+• 唯一开放夜游的长城段
+• 登城过程刺激有趣
+
+💰 **门票价格**：40元/人
+🌙 **夜游**：需另购票，灯光秀超美！
+
+🚌 **交通**：建议包车或报一日游
+
+💡 **建议**：体力好可以徒步登城，沿途风景绝佳！`;
+        }
+        
+        function generateGreatWallGeneralResponse() {
+            return `🧗 **北京长城游览全攻略**
+
+北京周边有多段长城，最受欢迎的有：
+
+🏔️ **热门选择**：
+
+| 长城段 | 特点 | 门票 | 适合人群 |
+|--------|------|------|----------|
+| 八达岭 | 最经典、交通便利 | 40元 | 首次来京 |
+| 慕田峪 | 景色秀丽、设施好 | 45元 | 家庭游 |
+| 司马台 | 原貌保存、夜景独特 | 40元 | 深度游 |
+| 居庸关 | 军事要地、离市区近 | 40元 | 历史爱好者 |
+
+💡 **选择建议**：
+• 首次来京 → 八达岭
+• 带孩子/老人 → 慕田峪
+• 摄影爱好者 → 司马台
+
+您想了解哪段长城的详细信息？`;
+        }
+        
+        function generateGreatWallTransportResponse() {
+            return `🚌 **长城交通指南**
+
+**🚄 八达岭长城**（最方便）：
+• S2线：黄土店站→八达岭站（约80分钟，6元）
+• 877路：德胜门→八达岭（约1.5小时，12元）
+• 直通车：旅游集散中心发车
+
+**🚐 慕田峪长城**：
+• 推荐包车或报一日游
+• 乘坐916路到怀柔，换乘小巴
+
+**💡 建议**：
+• 避开早高峰，7点前出发最佳
+• 携带身份证刷卡乘车
+• 提前查看S2线时刻表
+
+需要我帮您规划包含交通的行程吗？`;
+        }
+        
+        function generateSummerPalaceGeneralResponse() {
+            return `🏞️ **颐和园 — 皇家园林典范**
+
+颐和园是中国现存最大的皇家园林，以昆明湖和万寿山为主体，集江南园林精华于一身。
+
+📍 **基本信息**：
+• 地址：海淀区新建宫门路19号
+• 开放：06:00-20:00
+• 门票：30元/人
+• 联票：60元（含佛香阁、德和园等）
+
+⏱️ **建议时长**：3-4小时
+
+🎯 **必游景点**：
+• 昆明湖 - 湖光山色
+• 长廊 - 世界最长的画廊
+• 佛香阁 - 万寿山顶最佳观景
+• 十七孔桥 - 金光穿洞奇景
+• 石舫 - 慈禧太后最爱
+
+您想了解门票信息还是游览路线？`;
+        }
+        
+        function generateSummerPalaceInfoResponse() {
+            return `🏞️ **颐和园游览信息**
+
+💰 **门票价格**：
+• 门票：30元/人
+• 联票：60元（含佛香阁、德和园、颐和园博物馆）
+• 苏州街：10元/人
+
+⏰ **开放时间**：
+• 旺季（4月-10月）：06:00-20:00
+• 淡季（11月-3月）：06:30-19:00
+
+📱 **预约**：无需预约，现场购票即可
+
+💡 **游览建议**：
+• 从北宫门进入，直奔苏州街和佛香阁
+• 绕昆明湖一圈约2小时
+• 春秋两季景色最美
+
+需要我帮您规划路线吗？`;
+        }
+        
+        function generateSummerPalaceRouteResponse() {
+            return `🗺️ **颐和园经典游览路线**（3-4小时）
+
+**路线推荐**：
+
+1️⃣ **北宫门入园**
+   → 苏州街（江南水乡风情）
+
+2️⃣ **登万寿山**
+   → 佛香阁（俯瞰昆明湖）
+
+3️⃣ **沿山道下行**
+   → 长廊（边走边看彩绘）
+
+4️⃣ **昆明湖畔**
+   → 十七孔桥（最佳拍照点）
+
+5️⃣ **西堤漫步**
+   → 欣赏桃花、柳树
+
+6️⃣ **石舫**
+   → 清晏舫，慈禧太后最爱
+
+📸 **打卡点**：十七孔桥金光穿洞、长廊彩绘、佛香阁全景
+
+🎫 **建议购买联票**：包含主要景点，性价比高
+
+还有其他想了解的吗？`;
+        }
+        
+        function generateMuseumGeneralResponse() {
+            return `🏛️ **北京博物馆之城指南**
+
+作为"博物馆之城"，北京拥有众多博物馆：
+
+📚 **免费博物馆**（需预约）：
+• 国家博物馆 - 华夏五千年瑰宝
+• 首都博物馆 - 老北京历史文化
+• 中国美术馆 - 艺术珍品
+
+🔬 **专题博物馆**：
+• 中国科技馆 - 互动体验丰富
+• 北京自然博物馆 - 恐龙化石标本
+• 中国航空博物馆 - 飞机迷天堂
+
+🎨 **艺术博物馆**：
+• 798艺术区 - 当代艺术聚集地
+• 今日美术馆 - 前卫艺术展览
+
+📱 **预约提醒**：
+• 国家博物馆需提前3-7天预约
+• 周一大部分博物馆闭馆
+
+您对哪类博物馆感兴趣？`;
+        }
+        
+        function generateFreeMuseumResponse() {
+            return `🏛️ **北京免费博物馆大全**
+
+以下博物馆免费参观（需预约）：
+
+🌟 **必去推荐**：
+• 国家博物馆 - 需提前3-7天预约，周一闭馆
+• 首都博物馆 - 提前1-3天预约
+• 中国美术馆 - 每月第一个周日免费
+
+📚 **其他免费博物馆**：
+• 中国电影博物馆
+• 北京艺术博物馆
+• 中国园林博物馆
+• 周口店遗址博物馆
+• 永定门公园内博物馆
+
+💡 **预约方式**：
+• 微信公众号「国家博物馆」
+• 官网实名预约
+• 携带身份证原件入馆
+
+🎯 **建议**：国家博物馆+天安门广场可安排一日游
+
+需要我帮您规划博物馆之旅吗？`;
+        }
+        
+        function generateMuseumBookingResponse() {
+            return `📱 **博物馆预约指南**
+
+**🔥 国家博物馆**（最热门）：
+• 预约平台：微信公众号「国家博物馆」
+• 提前时间：3-7天
+• 放票时间：每日17:00
+• 凭证：身份证原件
+
+**🏛️ 首都博物馆**：
+• 预约平台：官网或美团
+• 提前时间：1-3天
+• 免费参观
+
+**💡 预约技巧**：
+1. 提前注册账号
+2. 设置提醒准时抢票
+3. 旺季建议多人同时抢票
+4. 携带学生证可能有优惠
+
+**⚠️ 注意**：周一大部分博物馆闭馆！`;
+        }
+        
+        function generatePekingDuckResponse() {
+            return `🦆 **北京烤鸭必吃指南**
+
+**🏆 高端品牌**：
+• 大董 - 最正宗，环境好，价格高
+• 全聚德 - 老字号，游客首选
+• 便宜坊 - 焖炉烤鸭代表
+
+**⭐ 网红推荐**（性价比高）：
+• 四季民福 - 故宫店景观绝佳
+• 玉林烤鸭 - 本地人常去
+• 利群烤鸭 - 胡同里的美味
+
+💰 **人均消费**：100-500元不等
+
+📍 **推荐店铺**：
+• 四季民福（故宫店）- 边吃边看故宫
+• 大董（工体店）- 环境优雅
+• 全聚德（前门店）- 打卡老字号
+
+需要我帮您推荐餐厅位置吗？`;
+        }
+        
+        function generateFoodRecommendResponse() {
+            return `🍜 **北京特色美食推荐**
+
+**🔥 必尝经典**：
+• 🦆 北京烤鸭 - 皮脆肉嫩
+• 🥟 老北京涮羊肉 - 铜锅炭火
+• 🥢 炸酱面 - 京城味道
+• 🧆 豆汁焦圈 - 老北京特色
+
+**🏮 美食街区**：
+• 南锣鼓巷 - 网红小吃聚集地
+• 簋街 - 深夜美食天堂
+• 王府井 - 小吃一条街
+• 五道口 - 年轻人聚集地
+
+**🍺 老字号**：
+• 东来顺 - 涮羊肉
+• 护国寺小吃 - 北京小吃
+• 隆福寺小吃 - 豌豆黄、艾窝窝
+
+您想找哪个区域的餐厅？`;
+        }
+        
+        function generateFoodGeneralResponse() {
+            return `🍜 **北京美食指南**
+
+北京美食汇聚四方，来看看：
+
+**🔥 特色美食**：
+• 🦆 北京烤鸭
+• 🥟 涮羊肉、爆肚
+• 🥢 炸酱面、卤煮
+• 🧆 豆汁、焦圈、艾窝窝
+
+**📍 美食地图**：
+• 东城区：南锣鼓巷、东四
+• 西城区：护国寺、什刹海
+• 朝阳区：簋街、三里屯
+• 海淀区：五道口、中关村
+
+**💡 寻找美食**：
+• 想吃烤鸭？推荐四季民福
+• 想尝小吃？去护国寺小吃
+• 想深夜觅食？簋街走起
+
+告诉我您想吃什么类型的美食，我帮您推荐！`;
+        }
+        
+        function generateOneDayRouteResponse() {
+            return `🗺️ **北京经典一日游路线**
+
+**🌅 经典皇城线**：
+08:30 天安门广场（升旗仪式）
+09:00 故宫博物院（深度游览）
+12:30 午餐（王府井/东单）
+14:00 景山公园（俯瞰故宫）
+15:30 北海公园（泛舟湖上）
+17:30 南锣鼓巷（胡同漫步）
+19:00 晚餐（簋街美食）
+
+💰 **费用预算**：约200元/人
+👟 **建议**：穿舒适运动鞋
+
+**⚠️ 重要提醒**：
+• 故宫需提前7天预约！
+• 建议从午门进、神武门出
+
+需要我帮您预约门票吗？`;
+        }
+        
+        function generateThreeDayRouteResponse() {
+            return `🗺️ **北京精华三日游攻略**
+
+**Day 1 - 皇城经典**
+🌅 天安门广场 → 故宫深度游
+🌆 景山公园 → 南锣鼓巷
+
+**Day 2 - 长城古迹**
+🌅 八达岭长城登城
+🌆 明十三陵 → 鸟巢水立方夜景
+
+**Day 3 - 园林新城**
+🌅 颐和园 → 圆明园
+🌆 清华/北大门口打卡
+
+💰 **费用预算**：
+• 门票：约300元/人
+• 交通：约100元/人
+• 餐饮：约300元/人
+• 总计：约700元/人
+
+👟 **必备物品**：舒适运动鞋、充电宝、零食
+
+📱 **预约提醒**：
+• 故宫提前7天预约
+• 长城提前1-3天预约
+
+需要我帮您定制专属路线吗？`;
+        }
+        
+        function generateRouteSuggestResponse() {
+            return `🗺️ **北京游玩路线推荐**
+
+请告诉我您的需求，我可以帮您规划：
+
+**📅 按天数**：
+• 一日游（精华路线）
+• 两日游（深度体验）
+• 三日游（全景覆盖）
+
+**👥 按人群**：
+• 亲子游（适合小朋友）
+• 情侣游（浪漫打卡）
+• 老年游（轻松休闲）
+• 学生游（经济实惠）
+
+**🎯 按主题**：
+• 人文古迹（故宫、长城）
+• 博物馆之旅
+• 自然风光（香山、颐和园）
+• 网红打卡
+
+请告诉我您的具体需求！`;
+        }
+        
+        function generateTransportResponse(q) {
+            let target = '';
+            if (q.includes('故宫')) target = '故宫';
+            else if (q.includes('长城')) target = '长城';
+            else if (q.includes('颐和园')) target = '颐和园';
+            else if (q.includes('天坛')) target = '天坛';
+            else if (q.includes('鸟巢')) target = '鸟巢';
+            
+            if (target) {
+                const transportInfo = {
+                    '故宫': { metro: '1号线天安门东/西站', bus: '1路、52路等', tip: '建议地铁最方便' },
+                    '长城': { metro: 'S2线黄土店站', bus: '877路德胜门站', tip: '建议早起坐S2线' },
+                    '颐和园': { metro: '4号线北宫门站', bus: '331路、375路等', tip: '北宫门站最近' },
+                    '天坛': { metro: '5号线天坛东门站', bus: '6路、35路等', tip: '东门进入最方便' },
+                    '鸟巢': { metro: '8号线奥体中心站', bus: '82路、419路等', tip: '看夜景建议晚上去' }
+                };
+                const info = transportInfo[target];
+                return `🚌 **前往${target}的交通方式**
+
+🚇 **地铁**：${info.metro}
+🚌 **公交**：${info.bus}
+
+💡 **建议**：${info.tip}
+
+📱 **出行APP**：
+• 亿通行（地铁扫码）
+• 北京一卡通
+• 高德地图（路线规划）
+
+需要我帮您规划行程吗？`;
+            }
+            
+            return `🚌 **北京交通指南**
+
+🚇 **地铁**：覆盖市区主要景点，最便捷
+• 建议购买一卡通或使用亿通行APP
+• 热门景点地铁站：天安门东、北海公园、北宫门等
+
+🚌 **公交**：覆盖范围广
+• 使用北京一卡通享折扣
+• 部分线路设有旅游专线
+
+🚕 **打车**：
+• 推荐使用滴滴、高德打车
+• 早晚高峰建议避开打车
+
+💡 **建议**：地铁+步行是最佳组合！`;
+        }
+        
+        function generateHotelResponse() {
+            return `🏨 **北京住宿推荐**
+
+**📍 推荐区域**：
+
+**① 天安门/王府井**（最方便）
+• 优点：离故宫最近，地铁便利
+• 缺点：价格较高
+• 适合：首次来京、行程紧张
+
+**② 鼓楼/南锣鼓巷**（有特色）
+• 优点：老北京胡同氛围
+• 缺点：设施相对老旧
+• 适合：文艺青年、深度游
+
+**③ 三里屯/工体**（时尚）
+• 优点：夜生活丰富，国际化
+• 缺点：离景点较远
+• 适合：购物、美食爱好者
+
+**④ 国贸/CBD**（商务）
+• 优点：高端酒店多
+• 缺点：旅游不太方便
+• 适合：商务人士
+
+💰 **价格参考**：
+• 经济型：200-400元/晚
+• 舒适型：400-800元/晚
+• 高端型：800+/晚
+
+需要我帮您推荐具体酒店吗？`;
+        }
+        
+        function generateWeatherResponse() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            let season = '';
+            let suggestion = '';
+            
+            if (month >= 3 && month <= 5) { season = '春季'; suggestion = '天气温暖，适合踏青赏花'; }
+            else if (month >= 6 && month <= 8) { season = '夏季'; suggestion = '天气炎热，注意防晒补水'; }
+            else if (month >= 9 && month <= 11) { season = '秋季'; suggestion = '秋高气爽，最佳游览季节'; }
+            else { season = '冬季'; suggestion = '天气寒冷，注意保暖'; }
+            
+            return `🌤️ **北京近期天气参考**
+
+📅 当前季节：${season}
+
+💡 **游览建议**：${suggestion}
+
+**📌 出行准备**：
+• 舒适运动鞋（必备）
+• 根据季节带外套
+• 充电宝、零食
+• 身份证、手机
+
+**⚠️ 温馨提示**：
+• 关注"故宫博物院"公众号查看实时限流
+• 旺季提前预约门票
+• 随身带水，注意防暑/防寒
+
+需要我帮您规划这个季节的行程吗？`;
+        }
+        
+        function generateAutumnResponse() {
+            return `🍂 **北京秋季游玩指南**
+
+秋季是北京最美的季节！
+
+**🌟 必打卡地**：
+• 🍁 香山公园 - 红叶节（10月中旬-11月）
+• 🏛️ 故宫 - 秋日银杏
+• 🏞️ 颐和园 - 昆明湖秋色
+• 🧗 长城 - 层林尽染
+
+**📅 最佳时间**：
+• 香山红叶：10月中旬-11月初
+• 银杏金黄：10月下旬-11月中旬
+
+**💰 费用**：香山门票10元，需提前预约
+
+**⚠️ 提醒**：
+• 香山红叶季人超多，建议早起
+• 穿舒适运动鞋
+• 带足水和零食
+
+需要我帮您规划秋季行程吗？`;
+        }
+        
+        function generateWinterResponse() {
+            return `❄️ **北京冬季游玩指南**
+
+北京冬天虽冷，但别有风情！
+
+**🌟 冬季特色**：
+• 🧗 长城雪景 - 银装素裹
+• 🏛️ 故宫雪景 - 最美紫禁城
+• 🎿 冰雪活动 - 各大雪场
+• 🏮 春节庙会 - 老北京年味
+
+**📅 最佳时间**：
+• 雪景：12月-2月（有雪时）
+• 庙会：春节期间
+
+**💡 冬季建议**：
+• 穿厚羽绒服、保暖内衣
+• 戴手套、帽子、围巾
+• 带润唇膏、护手霜
+• 室内有暖气，很舒适
+
+**⚠️ 注意**：故宫、长城冬季较冷，游览时间不宜过长
+
+需要我帮您规划冬季行程吗？`;
+        }
+        
+        function generateBestTimeResponse() {
+            return `📅 **北京最佳旅游时间**
+
+**🌸 春季（3-5月）**
+• 优点：天气温暖，花开正好
+• 推荐：玉渊潭樱花、颐和园踏青
+• 缺点：偶尔沙尘天气
+
+**🍂 秋季（9-11月）** ⭐强烈推荐
+• 优点：天高气爽，色彩斑斓
+• 推荐：香山红叶、故宫银杏
+• 缺点：旺季人多，需提前预约
+
+**❄️ 冬季（12-2月）**
+• 优点：人少，门票优惠
+• 推荐：故宫雪景、滑雪
+• 缺点：天气寒冷
+
+**☀️ 夏季（6-8月）**
+• 优点：绿树成荫，活动丰富
+• 推荐：胡同游、夜生活
+• 缺点：炎热多雨
+
+💡 **我的建议**：9-11月秋季最佳！`;
+        }
+        
+        function generateFreeSpotsResponse() {
+            return `🎉 **北京免费景点大全**
+
+**🏛️ 免费博物馆**：
+• 国家博物馆（需预约）
+• 首都博物馆（需预约）
+• 中国美术馆
+• 798艺术区
+
+**🏞️ 免费公园**：
+• 天安门广场
+• 奥林匹克公园（鸟巢、水立方外观）
+• 颐和园部分区域
+• 北海公园（进园免费，部分景点收费）
+• 什刹海、南锣鼓巷
+
+**🛤️ 免费体验**：
+• 天安门广场升旗仪式
+• 长安街夜景
+• 国贸CBD夜景
+• 清华北大门口打卡
+
+**💡 省钱攻略**：
+• 提前预约免费博物馆
+• 选择免费公园游览
+• 晚上看夜景不花钱
+
+需要我帮您规划免费游路线吗？`;
+        }
+        
+        function generateFamilyResponse() {
+            return `👨‍👩‍👧 **北京亲子游推荐**
+
+**🏛️ 适合孩子的景点**：
+• 🦕 北京自然博物馆 - 恐龙化石
+• 🔬 中国科技馆 - 互动体验
+• 🐼 北京动物园 - 熊猫馆必去
+• 🚂 中国铁路博物馆 - 火车迷天堂
+• 🎢 北京欢乐谷 - 欢乐刺激
+
+**📅 亲子行程建议**：
+Day1：自然博物馆 → 天坛
+Day2：中国科技馆 → 鸟巢水立方
+Day3：北京动物园 → 海洋馆
+
+**💡 温馨提示**：
+• 提前买好门票
+• 带好孩子的水杯、零食
+• 准备防晒/雨具
+• 注意休息，不要太累
+
+**🎫 优惠信息**：
+• 部分景点儿童免票
+• 学生证有优惠
+
+需要我帮您定制亲子游路线吗？`;
+        }
+        
+        function generateShoppingResponse() {
+            return `🛍️ **北京购物指南**
+
+**🏬 热门商圈**：
+• 王府井 - 老牌商业街
+• 西单 - 年轻时尚
+• 三里屯 - 国际品牌
+• 国贸CBD - 高端购物
+
+**🏮 文创/特色**：
+• 南锣鼓巷 - 文创小店
+• 798艺术区 - 艺术衍生品
+• 前门大街 - 老字号云集
+
+**🎁 北京伴手礼**：
+• 北京烤鸭（真空包装）
+• 稻香村糕点
+• 茶叶（茉莉花茶）
+• 景泰蓝工艺品
+• 故宫文创产品
+
+**💡 购物建议**：
+• 老字号认准「稻香村」
+• 文创产品故宫淘宝店有售
+• 烤鸭建议带真空包装的
+
+需要我帮您推荐购物地点吗？`;
+        }
+        
+        function generateNightViewResponse() {
+            return `🌃 **北京夜景推荐**
+
+**🏛️ 必看夜景**：
+• 鸟巢、水立方 - 灯光秀绝美
+• 天安门广场 - 降旗仪式后夜景
+• 长安街 - 灯火辉煌
+• 国贸CBD - 城市天际线
+• 什刹海/后海 - 酒吧街夜生活
+
+**📅 夜间行程建议**：
+18:00 故宫神武门出
+18:30 天安门广场夜景
+19:30 王府井逛街吃饭
+21:00 鸟巢水立方灯光秀
+
+**💡 温馨提示**：
+• 提前查看亮灯时间
+• 携带外套，晚上较凉
+• 注意人身财产安全
+
+需要我帮您规划夜游路线吗？`;
+        }
+        
+        function generateGreetingResponse() {
+            const greetings = [
+                '👋 您好！欢迎来到北京！\n\n我是您的智能文旅助手，可以帮您：\n• 🏯 景点咨询与预约\n• 🗺️ 路线规划与攻略\n• 🍜 美食推荐\n• 🚌 交通指南\n• 🎫 门票信息\n\n请告诉我您想了解什么？',
+                '😊 您好！很高兴为您服务！\n\n我是北京智慧文旅AI助手，可以帮您：\n• 规划完美行程\n• 推荐特色美食\n• 提供景点攻略\n• 解答各种疑问\n\n您有什么需要帮助的吗？'
+            ];
+            return greetings[Math.floor(Math.random() * greetings.length)];
+        }
+        
+        function generateMoreLikeResponse(topic) {
+            const moreInfo = {
+                '故宫': '除了故宫，还可以参观：\n• 景山公园 - 俯瞰故宫全景\n• 国家博物馆 - 文物瑰宝\n• 北海公园 - 皇家园林',
+                '长城': '北京周边还有这些长城：\n• 慕田峪 - 景色秀丽\n• 司马台 - 可看夜景\n• 居庸关 - 离市区近',
+                '博物馆': '其他值得参观的博物馆：\n• 中国科技馆 - 互动体验\n• 北京自然博物馆 - 恐龙化石\n• 798艺术区 - 当代艺术',
+                '美食': '其他美食推荐：\n• 东来顺 - 涮羊肉\n• 海碗居 - 炸酱面\n• 护国寺小吃 - 老北京小吃'
+            };
+            return moreInfo[topic] || '还有其他想了解的吗？请告诉我具体需求！';
+        }
+        
+        function generateSmartFallback(question) {
+            // 尝试识别问题中的关键词
+            const keywords = Object.keys(knowledgeTopics).flatMap(k => knowledgeTopics[k]);
+            const found = keywords.find(k => question.includes(k));
+            
+            if (found) {
+                return `💡 关于「${found}」，我来帮您解答！
+
+您可能想了解：
+• 基本信息（开放时间、门票）
+• 交通路线（怎么去）
+• 游览攻略（怎么玩）
+• 周边美食（附近吃什么）
+• 推荐路线（串联其他景点）
+
+请告诉我更具体的问题，比如：
+• "${found}门票多少钱？"
+• "${found}怎么去？"
+• "${found}游览需要多久？"`;
+            }
+            
+            return `🤔 您好！我是北京智慧文旅AI助手
+
+关于"${question}"，我的知识库可能还没有相关信息。
+
+**我可以帮您解答**：
+• 🏯 故宫、长城、颐和园等景点信息
+• 🍜 北京烤鸭、涮羊肉等美食推荐
+• 🗺️ 1-7日游路线规划
+• 🚌 地铁公交交通指南
+• 🎫 门票预约方式
+• 🏛️ 免费博物馆信息
+
+请换个问题试试，或者直接告诉我您想去哪里、想吃什么都行！`;
+        }
+        
+        function formatAIResponse(text) {
+            let formatted = escapeHtml(text);
+            formatted = formatted
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n\n/g, '</p><p class="mt-3">')
+                .replace(/\n/g, '<br>');
+            return `<p class="whitespace-pre-wrap">${formatted}</p>`;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ==================== 个性化路线规划 ====================
+        
+        function selectOption(category, value, element) {
+            const options = document.querySelectorAll(`.${category}-option`);
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedOptions[category] = value;
+        }
+        
+        async function generateRoute() {
+            if (!selectedOptions.days) { alert('请选择出行天数'); return; }
+            if (!selectedOptions.crowd) { alert('请选择出行人群'); return; }
+            if (!selectedOptions.preference) { alert('请选择游玩偏好'); return; }
+            
+            const resultDiv = document.getElementById('route-result');
+            const contentDiv = document.getElementById('route-content');
+            resultDiv.classList.remove('hidden');
+            contentDiv.innerHTML = `
+                <div class="flex items-center justify-center py-8">
+                    <div class="loading-spinner border-bj-gold"></div>
+                    <span class="ml-3 text-gray-600">AI正在为您生成专属路线...</span>
+                </div>`;
+            
+            const dayMap = { 'one-day': '一日游', 'two-day': '两日游', 'three-day': '三日游', 'weekend': '周末游' };
+            const crowdMap = { 'family': '亲子家庭', 'student': '学生群体', 'couple': '情侣出行', 'elder': '老年康养' };
+            const prefMap = { 'heritage': '人文古迹', 'nature': '自然风景', 'trending': '网红打卡', 'museum': '博物馆之旅', 'night': '演艺夜游' };
+            const budgetMap = { 'economy': '经济实惠', 'comfort': '品质舒适', 'luxury': '高端定制' };
+            
+            const userSpots = selectedSpots.length > 0 ? selectedSpots.map(s => s.name).join('、') : '无';
+            
+            const routePrompt = `你是一位北京旅游规划专家。请为以下用户定制一份北京${dayMap[selectedOptions.days] || '一日游'}行程：
+- 出行人群：${crowdMap[selectedOptions.crowd] || '普通'}
+- 游玩偏好：${prefMap[selectedOptions.preference] || '综合'}
+- 预算偏好：${budgetMap[selectedOptions.budget] || '适中'}
+- 已选景点（优先安排）：${userSpots}
+
+请以JSON格式返回（不加任何额外说明），格式：
+{"title":"路线标题","spots":[{"day":"Day 1","items":[{"time":"08:00","name":"景点名","desc":"活动描述"}]}],"budget":"预估费用","tips":["贴心提示1","贴心提示2","贴心提示3"]}`;
+            
+            try {
+                const reply = await callDoubaoAPI(
+                    [{ role: 'user', content: routePrompt }],
+                    '你是一个北京旅游路线规划专家，根据用户的需求生成个性化旅行路线。'
+                );
+                
+                let route;
+                try {
+                    route = JSON.parse(reply);
+                } catch {
+                    const jsonMatch = reply.match(/\{[\s\S]*\}/);
+                    route = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+                }
+                
+                if (route && route.spots) {
+                    renderRouteResult(route);
+                } else {
+                    throw new Error('解析失败');
+                }
+            } catch (error) {
+                console.log('API调用失败，使用本地数据');
+                const route = generateLocalRoute();
+                renderRouteResult(route);
+            }
+        }
+        
+        function generateLocalRoute() {
+            const dayKey = selectedOptions.days;
+            const crowdKey = selectedOptions.crowd;
+            
+            const routes = {
+                'one-day': {
+                    title: '北京经典一日游',
+                    spots: [
+                        { time: '08:30', name: '天安门广场', desc: '升旗仪式（视情况），人民英雄纪念碑' },
+                        { time: '09:30', name: '故宫博物院', desc: '紫禁城深度游览，建议租用讲解器' },
+                        { time: '12:30', name: '午餐', desc: '王府井美食区，北京烤鸭推荐' },
+                        { time: '14:00', name: '景山公园', desc: '俯瞰故宫全貌，拍摄绝佳位置' },
+                        { time: '16:00', name: '北海公园', desc: '皇家园林，白塔留影' },
+                        { time: '18:00', name: '什刹海/南锣鼓巷', desc: '老北京风情，傍晚漫步' }
+                    ],
+                    budget: '约200元/人',
+                    tips: ['故宫需提前7天预约', '建议从午门进，神武门出', '带上身份证原件']
+                },
+                'three-day': {
+                    title: '北京深度三日游',
+                    spots: [
+                        { day: 'Day 1', items: [
+                            { time: '08:00', name: '天安门广场', desc: '升旗仪式，人民英雄纪念碑' },
+                            { time: '09:00', name: '故宫博物院', desc: '深度游览，太和殿、乾清宫、御花园' },
+                            { time: '13:00', name: '午餐+休息', desc: '王府井，品尝北京烤鸭' },
+                            { time: '15:00', name: '国家博物馆', desc: '华夏瑰宝，感受中华文明' },
+                            { time: '18:00', name: '天安门夜景', desc: '降旗仪式，广场灯光' }
+                        ]},
+                        { day: 'Day 2', items: [
+                            { time: '07:00', name: '八达岭长城', desc: '早起登城，建议乘坐缆车' },
+                            { time: '12:00', name: '午餐', desc: '长城脚下农家菜' },
+                            { time: '14:00', name: '明十三陵', desc: '定陵地下宫殿探秘' },
+                            { time: '17:00', name: '返回市区', desc: '鸟巢水立方夜景打卡' }
+                        ]},
+                        { day: 'Day 3', items: [
+                            { time: '08:00', name: '颐和园', desc: '皇家园林，昆明湖畔漫步' },
+                            { time: '12:00', name: '午餐', desc: '清华科技园美食区' },
+                            { time: '14:00', name: '圆明园', desc: '历史沉思，西洋楼遗址' },
+                            { time: '16:30', name: '清华/北大', desc: '门口打卡，感受学府氛围' },
+                            { time: '18:00', name: '三里屯/国贸', desc: '现代北京，购物美食' }
+                        ]}
+                    ],
+                    budget: '约800元/人（不含住宿）',
+                    tips: ['长城建议早起错峰', '提前预约故宫门票', '穿舒适运动鞋', '带上充电宝和零食']
+                }
+            };
+            
+            if (dayKey === 'one-day') return routes['one-day'];
+            return routes['three-day'];
+        }
+        
+        function renderRouteResult(route) {
+            const contentDiv = document.getElementById('route-content');
+            let spotsHtml = '';
+            
+            if (route.spots[0] && route.spots[0].items) {
+                route.spots.forEach(day => {
+                    spotsHtml += `
+                        <div class="mb-6">
+                            <h4 class="text-lg font-bold text-bj-blue mb-3 flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-5 h-5 text-bj-gold"></i>${day.day}
+                            </h4>
+                            <div class="space-y-3 ml-4">
+                                ${day.items.map(item => `
+                                    <div class="timeline-item">
+                                        <div class="bg-gray-50 rounded-lg p-3">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <span class="text-xs font-mono text-bj-blue bg-bj-blue/10 px-2 py-0.5 rounded">${item.time}</span>
+                                                <span class="font-medium text-gray-800">${item.name}</span>
+                                            </div>
+                                            <p class="text-sm text-gray-600">${item.desc}</p>
+                                        </div>
+                                    </div>`).join('')}
+                            </div>
+                        </div>`;
+                });
+            } else {
+                spotsHtml = `<div class="space-y-3">
+                    ${route.spots.map(item => `
+                        <div class="timeline-item">
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-mono text-bj-blue bg-bj-blue/10 px-2 py-0.5 rounded">${item.time}</span>
+                                    <span class="font-medium text-gray-800">${item.name}</span>
+                                </div>
+                                <p class="text-sm text-gray-600">${item.desc}</p>
+                            </div>
+                        </div>`).join('')}
+                </div>`;
+            }
+            
+            contentDiv.innerHTML = `
+                <div class="bg-gradient-to-r from-bj-blue/5 to-bj-gold/5 rounded-xl p-4 mb-4">
+                    <h3 class="font-bold text-bj-blue font-serif">${route.title}</h3>
+                    <div class="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
+                        <span class="flex items-center gap-1"><i data-lucide="wallet" class="w-4 h-4 text-bj-gold"></i>预算：${route.budget}</span>
+                        <span class="flex items-center gap-1"><i data-lucide="lightbulb" class="w-4 h-4 text-bj-gold"></i>${route.tips.length}条贴心提示</span>
+                    </div>
+                </div>
+                ${spotsHtml}
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4">
+                    <h4 class="font-medium text-amber-800 mb-2 flex items-center gap-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4"></i>贴心提示
+                    </h4>
+                    <ul class="text-sm text-amber-700 space-y-1">
+                        ${route.tips.map(tip => `<li>• ${tip}</li>`).join('')}
+                    </ul>
+                </div>`;
+            lucide.createIcons();
+        }
+        
+        function exportRoute() {
+            alert('路线已生成！可截图保存或直接分享给好友。\n\n（预留功能：可导出为PDF或分享链接）');
+        }
+        
+        // ==================== 景点智能讲解 ====================
+        
+        const attractionsData = [
+            { id: 'forbidden-city', name: '故宫博物院', category: 'heritage', level: '5A', tags: ['必去', '世界遗产'], image: '🏯', brief: '世界上现存规模最大、保存最为完整的木质结构古建筑群之一', info: [{label:'开放时间',value:'08:30-17:00'},{label:'门票',value:'旺季60元/淡季40元'},{label:'建议时长',value:'3-4小时'},{label:'地址',value:'东城区景山前街4号'}], guide: { overview: '故宫又名紫禁城，是明清两代的皇家宫殿，始建于明永乐四年（1406年），历时14年建成。', history: '故宫建筑布局遵循"前朝后寝"的礼制，以乾清门为界，分为外朝和内廷两部分。', highlights: ['太和殿：金銮殿，皇帝举行重大典礼', '乾清宫：皇帝处理政务', '御花园：精美的皇家园林', '珍宝馆：宫廷金银玉器'], tips: '建议从午门进入，神武门离开。' }},
+            { id: 'great-wall', name: '八达岭长城', category: 'heritage', level: '5A', tags: ['必去', '登高'], image: '🧗', brief: '万里长城的精华段落，"居庸之险不在关而在八达岭"', info: [{label:'开放时间',value:'旺季06:30-19:00'},{label:'门票',value:'旺季40元/淡季35元'},{label:'建议时长',value:'3-5小时'},{label:'交通',value:'德胜门877路公交'}], guide: { overview: '八达岭长城是明长城最具代表性的段落之一，因"路从此分，四通八达"而得名。', history: '八达岭长城始建于明弘治十八年（1505年），是明代重要的军事防御工程。', highlights: ['好汉坡：北八楼，最高点', '望京石：登城必打卡的标志性巨石', '中国长城博物馆', '夜长城（季节性）'], tips: '建议早起出发，避开人流高峰。' }},
+            { id: 'summer-palace', name: '颐和园', category: 'heritage', level: '5A', tags: ['必去', '园林'], image: '🏞️', brief: '中国现存规模最大的皇家园林，被誉为"皇家园林博物馆"', info: [{label:'开放时间',value:'06:00-19:00'},{label:'门票',value:'旺季30元/淡季20元'},{label:'建议时长',value:'3-4小时'},{label:'地址',value:'海淀区新建宫门路19号'}], guide: { overview: '颐和园以昆明湖和万寿山为主体，集江南园林精华于一身，是清代皇家的夏宫。', history: '颐和园前身为清漪园，始建于乾隆十五年（1750年）。1860年被英法联军焚毁后重建。', highlights: ['佛香阁：万寿山巅，俯瞰全园', '长廊：彩画长廊，全长728米', '昆明湖：仿西湖而建', '十七孔桥：544只石狮子'], tips: '建议从北宫门进入，先登佛香阁俯瞰全景。' }},
+            { id: 'temple-of-heaven', name: '天坛公园', category: 'heritage', level: '5A', tags: ['必去', '祈福'], image: '⛩️', brief: '明清两代皇帝祭天祈谷的圣地，建筑艺术的杰作', info: [{label:'开放时间',value:'06:00-21:00'},{label:'门票',value:'旺季15元/淡季10元'},{label:'建议时长',value:'2-3小时'},{label:'地址',value:'东城区天坛东路甲1号'}], guide: { overview: '天坛是明清两代皇帝祭天、祈谷的场所，占地面积约273万平方米。', history: '天坛始建于明永乐十八年（1420年），与故宫同时建造。', highlights: ['祈年殿：圆形大殿，蓝瓦金顶', '回音壁：环绕皇穹宇，可传声', '圜丘：祭天大典场所', '丹陛桥：连接祈年殿和圜丘'], tips: '回音壁的神奇传声效果值得体验。' }},
+            { id: 'national-museum', name: '国家博物馆', category: 'museum', level: '国家一级', tags: ['免费', '必去'], image: '🏛️', brief: '中华优秀传统文化、革命文化和社会主义先进文化的最高殿堂', info: [{label:'开放时间',value:'09:00-17:00'},{label:'门票',value:'免费（需预约）'},{label:'建议时长',value:'3-4小时'},{label:'地址',value:'东城区东长安街16号'}], guide: { overview: '中国国家博物馆是代表国家收藏、研究、展示、阐释中华优秀传统文化的最高机构。', history: '国家博物馆前身可追溯至1909年成立的国立历史博物馆。', highlights: ['古代中国展厅：中华文明史', '复兴之路展厅', '航天展：神舟飞船返回舱', '国际交流展'], tips: '必须提前在官方公众号预约，携带身份证原件。' }},
+            { id: 'science-museum', name: '中国科技馆', category: 'museum', level: '国家一级', tags: ['亲子', '互动'], image: '🔬', brief: '中国唯一的国家级综合性科技馆，互动体验丰富', info: [{label:'开放时间',value:'09:30-17:00'},{label:'门票',value:'主展厅30元/人'},{label:'建议时长',value:'3-4小时'},{label:'地址',value:'朝阳区北辰东路5号'}], guide: { overview: '中国科技馆以"体验科学、启迪创新"为理念，通过互动展品让公众感受科技魅力。', history: '中国科技馆于1988年建成开放，2009年新馆落成并对外开放。', highlights: ['儿童科学乐园：3-8岁儿童', '探索与发现展厅', '科技与生活展厅', '挑战与未来展厅'], tips: '儿童科学乐园适合低龄儿童，部分展项需预约。' }},
+            { id: 'olympic-park', name: '奥林匹克公园', category: 'modern', level: '5A', tags: ['夜景', '打卡'], image: '🏟️', brief: '2008年北京奥运会核心区域，现代北京的标志性景观', info: [{label:'开放时间',value:'全天开放'},{label:'门票',value:'免费'},{label:'地址',value:'朝阳区北辰路'},{label:'建议时长',value:'2-3小时'}], guide: { overview: '奥林匹克公园是2008年北京奥运会的主要举办地，包括鸟巢、水立方等主要场馆。', history: '2008年8月8日，北京奥运会在这里盛大开幕，鸟巢和水立方成为北京新地标。', highlights: ['鸟巢：钢结构编织，夜景璀璨', '水立方：膜结构建筑', '玲珑塔：俯瞰奥园全景', '音乐喷泉：每晚定时表演'], tips: '建议傍晚前往，先游览场馆外观，夜晚欣赏灯光秀。' }},
+            { id: 'beihai-park', name: '北海公园', category: 'nature', level: '5A', tags: ['园林', '休闲'], image: '⛵', brief: '中国现存最古老的皇家园林，"让我们荡起双桨"的创作地', info: [{label:'开放时间',value:'06:00-21:00'},{label:'门票',value:'10元（联票20元）'},{label:'建议时长',value:'2-3小时'},{label:'地址',value:'西城区文津街1号'}], guide: { overview: '北海公园是辽、金、元、明、清五个朝代的皇家禁苑，已有900多年历史。', history: '北海公园始建于辽代，金代建琼华岛，元代以琼华岛为中心建大宁宫。', highlights: ['白塔：琼华岛顶，标志性建筑', '九龙壁：中国现存三大九龙壁之一', '濠濮间：宁静致远', '园中园建筑群'], tips: '可乘坐游船泛舟湖上，春季赏花、秋季观叶皆宜。' }},
+            { id: 'nanluoguxiang', name: '南锣鼓巷', category: 'modern', level: '历史文化街区', tags: ['网红', '美食'], image: '🏮', brief: '北京最古老的胡同保护区，文创小店与美食的天堂', info: [{label:'开放时间',value:'全天开放'},{label:'门票',value:'免费'},{label:'建议时长',value:'2-3小时'},{label:'地址',value:'东城区南锣鼓巷'}], guide: { overview: '南锣鼓巷是北京最古老的胡同保护区，全长786米，是元代胡同院落肌理的棋盘式传统民居区。', history: '南锣鼓巷始建于元代，因地势中间高两端低如锣鼓而得名。', highlights: ['文创小店：特色手工艺品', '传统美食：炸酱面、卤煮', '网红打卡：猫小院等', '周边胡同探索'], tips: '建议平日前往，周末人流量大。' }},
+            { id: 'jingshan-park', name: '景山公园', category: 'nature', level: '4A', tags: ['俯瞰', '摄影'], image: '🌄', brief: '北京城制高点，俯瞰故宫全景的最佳拍摄地', info: [{label:'开放时间',value:'06:00-20:30'},{label:'门票',value:'2元'},{label:'建议时长',value:'1-2小时'},{label:'地址',value:'西城区景山西街44号'}], guide: { overview: '景山公园是明清两代的皇家园林，万春亭是北京中轴线的制高点。', history: '景山始建于辽代，金代建琼华岛，元代以琼华岛为中心建大宁宫。', highlights: ['万春亭：俯瞰故宫全景', '崇祯自缢处', '牡丹园：春季赏花', '寿皇殿：清代皇帝祭祖'], tips: '日落前1小时登顶，拍摄故宫全景最佳时机。' }},
+            { id: 'xiangshan', name: '香山公园', category: 'nature', level: '4A', tags: ['红叶', '登山'], image: '🍁', brief: '北京著名的山林公园，秋季红叶闻名全国', info: [{label:'开放时间',value:'06:00-18:30'},{label:'门票',value:'旺季10元/淡季5元'},{label:'建议时长',value:'3-4小时'},{label:'地址',value:'海淀区买卖街40号'}], guide: { overview: '香山公园是一座具有皇家园林特色的大型山林公园，以红叶景观闻名。', history: '香山公园始建于金大定二十六年（1186年），清代康熙、乾隆两帝在此兴建行宫。', highlights: ['香炉峰：香山最高峰', '碧云寺：千年古刹', '红叶区：十月至十一月最佳', '见心斋：江南风格园林'], tips: '秋季赏红叶建议平日前往，周末人山人海。' }},
+            { id: 'yonghe-temple', name: '雍和宫', category: 'heritage', level: '4A', tags: ['祈福', '藏传'], image: '🛕', brief: '北京最大的藏传佛教寺院，清代雍正帝潜邸', info: [{label:'开放时间',value:'09:00-17:00'},{label:'门票',value:'25元'},{label:'建议时长',value:'1.5-2小时'},{label:'地址',value:'东城区雍和宫大街12号'}], guide: { overview: '雍和宫是北京最大的藏传佛教寺院，曾是雍正皇帝继位前的府邸。', history: '雍和宫建于清康熙三十三年（1694年），乾隆九年（1744年）改为喇嘛庙。', highlights: ['万福阁：18米弥勒巨像', '雍和宫殿：银质须弥山', '法轮殿：500罗汉山', '乾隆御笔碑文'], tips: '初一到十五香火最旺，建议平日前往祈福体验更佳。' }},
+            { id: 'shichahai', name: '什刹海', category: 'modern', level: '历史文化区', tags: ['酒吧', '夜景'], image: '🌙', brief: '北京最具市井风情的文化休闲区，酒吧街与老胡同并存', info: [{label:'开放时间',value:'全天开放'},{label:'门票',value:'免费'},{label:'建议时长',value:'2-3小时'},{label:'地址',value:'西城区什刹海'}], guide: { overview: '什刹海是北京城内最大的开放式水域，包括前海、后海和西海三部分。', history: '什刹海在元代是漕运码头，明清时期成为文人墨客的聚集地。', highlights: ['后海酒吧街：夜生活', '银锭桥：观西山落日', '胡同游：老北京风情', '恭王府花园'], tips: '傍晚时分前往最佳，银锭桥看日落西山，夜晚听酒吧民谣。' }},
+            { id: 'gugong-museum', name: '恭王府', category: 'heritage', level: '5A', tags: ['王府', '园林'], image: '🏠', brief: '清代规模最大的一座王府，曾为和珅宅邸', info: [{label:'开放时间',value:'08:00-17:00'},{label:'门票',value:'40元'},{label:'建议时长',value:'2小时'},{label:'地址',value:'西城区柳荫街甲14号'}], guide: { overview: '恭王府是清代规模最大的王府，曾先后作为和珅、庆亲王和恭亲王的宅邸。', history: '恭王府始建于清乾隆年间（1776年），是中国现存最完整的王府建筑群。', highlights: ['银安殿：王府正殿', '锦萃园：王府后花园', '大戏楼：全封闭式戏楼', '福字碑：康熙御笔'], tips: '参观完什刹海可步行前往恭王府，两个景点相距很近。' }},
+            { id: 'fragrant-hills', name: '圆明园遗址', category: 'heritage', level: '5A', tags: ['历史', '遗址'], image: '🏚️', brief: '清代大型皇家园林遗址，见证中华民族屈辱历史', info: [{label:'开放时间',value:'07:00-19:00'},{label:'门票',value:'10元'},{label:'建议时长',value:'3-4小时'},{label:'地址',value:'海淀区清华西路28号'}], guide: { overview: '圆明园是清代大型皇家园林，被誉为"万园之园"，1860年被英法联军焚毁。', history: '圆明园始建于康熙四十六年（1707年），历经六代皇帝150余年的扩建。', highlights: ['大水法遗址：标志性遗迹', '西洋楼遗址区', '正觉寺：唯一幸存的建筑', '荷花池：夏季赏荷'], tips: '建议租借讲解器或使用AI导游，了解每一处遗址背后的历史故事。' }},
+            { id: 'da-xing-wildlife', name: '北京野生动物园', category: 'nature', level: '4A', tags: ['亲子', '动物'], image: '🐼', brief: '集动物观赏、科普教育、休闲娱乐于一体的大型野生动物园', info: [{label:'开放时间',value:'09:00-17:00'},{label:'门票',value:'150元/人'},{label:'建议时长',value:'4-5小时'},{label:'地址',value:'大兴区榆垡镇'}], guide: { overview: '北京野生动物园占地3000余亩，饲养展出动物200余种10000余只。', history: '北京野生动物园于2001年正式开园，是京津冀地区最大的野生动物园之一。', highlights: ['自驾车游览区：亲密接触动物', '猛兽区：狮子老虎', '小火车体验', '动物表演馆'], tips: '建议自驾前往，上午入园动物最活跃，提前网上购票可享优惠。' }},
+            { id: 'central-tv-tower', name: '中央电视塔', category: 'modern', level: '4A', tags: ['登高', '观景'], image: '🗼', brief: '北京最高的地标建筑之一，360度俯瞰京城全景', info: [{label:'开放时间',value:'08:30-22:00'},{label:'门票',value:'90元'},{label:'建议时长',value:'1.5-2小时'},{label:'地址',value:'海淀区西三环中路11号'}], guide: { overview: '中央广播电视塔高405米，是中国第三高塔，北京重要的地标建筑。', history: '中央电视塔于1992年建成启用，是集广播电视发射和旅游观光为一体的多功能塔。', highlights: ['露天观景台：238米高空', '旋转餐厅：221米高空用餐', '首都印象展厅', '空中邮局'], tips: '傍晚前往最佳，可同时欣赏日落和京城夜景，旋转餐厅需提前预约。' }},
+            { id: 'world-park', name: '世界公园', category: 'modern', level: '4A', tags: ['打卡', '微缩'], image: '🌍', brief: '汇集世界名胜微缩景观的主题公园', info: [{label:'开放时间',value:'09:00-17:30'},{label:'门票',value:'100元/人'},{label:'建议时长',value:'3-4小时'},{label:'地址',value:'丰台区花乡丰葆路158号'}], guide: { overview: '世界公园汇集了世界50多个国家100多处著名人文自然景观的微缩建筑。', history: '世界公园于1993年开园，是国内最早的世界微缩景观主题公园之一。', highlights: ['埃菲尔铁塔：1:3比例', '金字塔人面狮身像', '悉尼歌剧院', '日本庭院'], tips: '适合拍照打卡，建议带好相机，整体游览约需半天时间。' }}
+        ];
+        
+        function initAttractions() { renderAttractions('all'); }
+        
+        function renderAttractions(filter) {
+            const grid = document.getElementById('attractions-grid');
+            const filtered = filter === 'all' ? attractionsData : attractionsData.filter(a => a.category === filter);
+            
+            grid.innerHTML = filtered.map(attr => `
+                <div class="attraction-card bg-white rounded-xl border border-gray-100 p-4 gold-border cursor-pointer" onclick="showAttractionDetail('${attr.id}')">
+                    <div>
+                        <div class="text-4xl mb-3">${attr.image}</div>
+                        <h3 class="font-bold text-bj-blue mb-1">${attr.name}</h3>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-2 py-0.5 bg-bj-blue/10 text-bj-blue text-xs rounded">${attr.level}</span>
+                            ${attr.tags.slice(0, 2).map(tag => `<span class="tag-pill">${tag}</span>`).join('')}
+                        </div>
+                        <p class="text-xs text-gray-500 line-clamp-2">${attr.brief}</p>
+                    </div>
+                    <button onclick="addToRouteFromList('${attr.id}')" class="mt-3 w-full py-1.5 rounded-lg border border-bj-gold text-bj-gold text-xs font-medium hover:bg-bj-gold/5 transition-all flex items-center justify-center gap-1">➕ 加入路线</button>
+                </div>`).join('');
+        }
+        
+        function filterAttractions(filter, element) {
+            document.querySelectorAll('.attraction-filter').forEach(btn => {
+                btn.classList.remove('bg-bj-blue', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            element.classList.remove('bg-gray-100', 'text-gray-600');
+            element.classList.add('bg-bj-blue', 'text-white');
+            renderAttractions(filter);
+        }
+        
+        function showHotRankingDetail(name) {
+            const spot = attractionsData.find(a => a.name === name);
+            if (spot) showAttractionDetail(spot.id);
+        }
+        
+        function showAttractionDetail(id) {
+            const attraction = attractionsData.find(a => a.id === id);
+            if (!attraction) return;
+            currentAttraction = attraction;
+            
+            document.getElementById('modal-title').textContent = attraction.name;
+            document.getElementById('modal-content').innerHTML = `
+                <div class="space-y-5">
+                    <div class="flex items-center gap-4 flex-wrap" id="detail-tags">
+                        <span class="px-3 py-1 bg-bj-blue/10 text-bj-blue text-sm rounded-lg">${attraction.level}</span>
+                        ${attraction.tags.map(tag => `<span class="px-3 py-1 bg-bj-gold/10 text-bj-gold-dark text-sm rounded-lg">${tag}</span>`).join('')}
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <div class="aspect-video rounded-xl bg-gradient-to-br from-bj-blue/5 to-bj-gold/5 flex items-center justify-center text-7xl border border-gray-100">
+                                ${attraction.image}
+                            </div>
+                            <div class="flex gap-4 mt-4">
+                                <button onclick="playAudioGuide()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-bj-blue to-blue-700 text-white font-medium hover:from-blue-600 hover:to-blue-800 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm shadow-md">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor"/></svg>
+                                    播放讲解
+                                </button>
+                                <button onclick="addToRoute()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-bj-gold to-yellow-500 text-white font-medium hover:from-yellow-500 hover:to-amber-500 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm shadow-md">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    加入路线
+                                </button>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <h4 class="font-medium text-bj-blue mb-3 flex items-center gap-2 text-sm"><i data-lucide="info" class="w-4 h-4 text-bj-gold"></i>基本信息</h4>
+                                <div class="space-y-2 text-sm" id="detail-info">
+                                    ${attraction.info.map(info => `<div class="flex justify-between py-1 border-b border-gray-100 last:border-0"><span class="text-gray-500">${info.label}</span><span class="font-medium text-gray-800">${info.value}</span></div>`).join('')}
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 leading-relaxed" id="detail-brief">${attraction.brief}</p>
+                            <div class="bg-gradient-to-r from-bj-blue/5 to-bj-gold/5 rounded-xl p-4 text-sm space-y-2" id="detail-guide">
+                                <p><span class="font-medium text-bj-blue">📜 概述：</span>${attraction.guide.overview}</p>
+                                <p><span class="font-medium text-bj-blue">📚 历史：</span>${attraction.guide.history}</p>
+                                <div><span class="font-medium text-bj-blue">⭐ 亮点：</span>
+                                    <ul class="mt-1 space-y-0.5">${attraction.guide.highlights.map(h => `<li class="flex items-start gap-2 text-gray-600"><span class="text-bj-gold mt-1">•</span>${h}</li>`).join('')}</ul>
+                                </div>
+                                <p class="flex items-start gap-2 text-bj-blue/80 text-xs mt-2"><i data-lucide="lightbulb" class="w-3.5 h-3.5 mt-0.5 flex-shrink-0"></i>${attraction.guide.tips}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            
+            document.getElementById('modal').classList.add('active');
+            setTimeout(() => {
+                lucide.createIcons();
+                // 重新绑定 lucide 图标
+                document.querySelectorAll('#modal-content svg').forEach(svg => {
+                    const parent = svg.parentElement;
+                    if (parent && parent.tagName === 'I') {
+                        parent.replaceWith(svg);
+                    }
+                });
+            }, 100);
+        }
+        
+        function closeAttractionDetail() {
+            document.getElementById('modal').classList.remove('active');
+            if (currentUtterance) { speechSynthesis.cancel(); currentUtterance = null; }
+            currentAttraction = null;
+        }
+        
+        function playAudioGuide() {
+            if (!currentAttraction) return;
+            
+            if (currentUtterance) {
+                speechSynthesis.cancel();
+                currentUtterance = null;
+            }
+            
+            const modal = document.getElementById('modal');
+            document.getElementById('modal-title').textContent = '🎧 AI景点讲解';
+            
+            // 显示加载状态
+            document.getElementById('modal-content').innerHTML = `
+                <div class="text-center py-8">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-bj-blue/10 flex items-center justify-center animate-pulse">
+                        <i data-lucide="loader-2" class="w-10 h-10 text-bj-blue animate-spin"></i>
+                    </div>
+                    <p class="text-gray-600 mb-2">正在生成：${currentAttraction.name}讲解内容</p>
+                    <p class="text-sm text-gray-500">请稍候，AI正在为您准备精彩的景点介绍...</p>
+                </div>`;
+            modal.classList.add('active');
+            setTimeout(() => lucide.createIcons(), 100);
+            
+            const guidePrompt = `你是一位专业的北京景点导游，请为游客详细介绍"${currentAttraction.name}"这个景点。用生动、口语化的语言，生成一段适合语音播报的讲解内容（300字左右），包括景点简介、历史故事、游览建议。直接输出讲解内容，不要加标题。`;
+            
+            callDoubaoAPI([{ role: 'user', content: guidePrompt }], '你是一位专业的北京导游，语言生动亲切。')
+            .then(guideText => {
+                currentAudioGuide = guideText;
+                document.getElementById('modal-content').innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-bj-blue/10 flex items-center justify-center cursor-pointer hover:bg-bj-blue/20 transition-all" onclick="toggleSpeech()" id="speech-btn">
+                            <i data-lucide="volume-2" class="w-8 h-8 text-bj-blue" id="speech-icon"></i>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">${currentAttraction.name} - AI语音讲解</p>
+                        <button onclick="toggleSpeech()" id="speech-toggle-btn" class="px-6 py-3 rounded-xl bg-gradient-to-r from-bj-blue to-indigo-700 text-white text-sm font-semibold hover:shadow-lg hover:shadow-bj-blue/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 inline-flex items-center gap-2 shadow-md ring-1 ring-white/20"><i data-lucide="volume-2" class="w-4 h-4"></i> 点击播放讲解</button>
+                    </div>
+                    <div class="bg-gradient-to-r from-bj-blue/5 to-bj-gold/5 rounded-xl p-5 text-sm text-gray-700 leading-relaxed max-h-60 overflow-y-auto">
+                        ${guideText.replace(/\n/g, '<br>')}
+                    </div>`;
+                setTimeout(() => lucide.createIcons(), 100);
+            })
+            .catch(() => {
+                document.getElementById('modal-content').innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-6xl mb-4">🏛️</div>
+                        <p class="text-gray-700">${currentAttraction.guide?.overview || currentAttraction.brief || ''}</p>
+                    </div>`;
+                setTimeout(() => lucide.createIcons(), 100);
+            });
+        }
+        
+        function toggleSpeech() {
+            if (!currentAudioGuide) return;
+            
+            if (speechSynthesis.speaking && !speechSynthesis.paused) {
+                speechSynthesis.pause();
+                const btn = document.getElementById('speech-toggle-btn');
+                if (btn) btn.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i> 继续播放'; setTimeout(() => lucide.createIcons(), 10);
+                return;
+            }
+            if (speechSynthesis.paused) {
+                speechSynthesis.resume();
+                const btn = document.getElementById('speech-toggle-btn');
+                if (btn) btn.innerHTML = '<i data-lucide="pause" class="w-4 h-4"></i> 暂停播放'; setTimeout(() => lucide.createIcons(), 10);
+                return;
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(currentAudioGuide);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.1;
+            
+            const voices = speechSynthesis.getVoices();
+            const zhVoice = voices.find(v => v.lang.startsWith('zh'));
+            if (zhVoice) utterance.voice = zhVoice;
+            
+            utterance.onstart = () => {
+                const btn = document.getElementById('speech-toggle-btn');
+                if (btn) btn.innerHTML = '<i data-lucide="pause" class="w-4 h-4"></i> 暂停播放'; setTimeout(() => lucide.createIcons(), 10);
+                const icon = document.getElementById('speech-icon');
+                if (icon) icon.className = 'w-8 h-8 text-bj-blue animate-pulse';
+            };
+            utterance.onend = () => {
+                const btn = document.getElementById('speech-toggle-btn');
+                if (btn) btn.innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4"></i> 重新播放'; setTimeout(() => lucide.createIcons(), 10);
+                const icon = document.getElementById('speech-icon');
+                if (icon) icon.className = 'w-8 h-8 text-bj-blue';
+                currentUtterance = null;
+            };
+            utterance.onerror = () => {
+                const btn = document.getElementById('speech-toggle-btn');
+                if (btn) btn.innerHTML = '<i data-lucide="alert-triangle" class="w-4 h-4"></i> 播放失败，请重试'; setTimeout(() => lucide.createIcons(), 10);
+                const icon = document.getElementById('speech-icon');
+                if (icon) icon.className = 'w-8 h-8 text-bj-blue';
+            };
+            
+            currentUtterance = utterance;
+            speechSynthesis.speak(utterance);
+            const btn = document.getElementById('speech-toggle-btn');
+            if (btn) btn.textContent = '🔊 播放中...';
+        }
+        
+        function addToRoute() {
+            if (!currentAttraction) return;
+            if (selectedSpots.find(s => s.id === currentAttraction.id)) {
+                alert(`"${currentAttraction.name}" 已在路线中`);
+                return;
+            }
+            selectedSpots.push({...currentAttraction});
+            updateSelectedSpotsUI();
+        }
+        
+        // 从景点列表添加
+        function addToRouteFromList(id) {
+            const spot = attractionsData.find(a => a.id === id);
+            if (!spot) return;
+            if (selectedSpots.find(s => s.id === id)) {
+                alert(`"${spot.name}" 已在路线中`);
+                return;
+            }
+            selectedSpots.push({...spot});
+            updateSelectedSpotsUI();
+        }
+        
+        // 更新已选景点显示
+        function updateSelectedSpotsUI() {
+            const el = document.getElementById('selected-spots');
+            if (!el) return;
+            if (selectedSpots.length === 0) {
+                el.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">尚未选择景点，请在景点列表中点击"加入路线"</p>`;
+                return;
+            }
+            el.innerHTML = selectedSpots.map((spot, idx) => `
+                <div class="flex items-center gap-2 px-3 py-2 bg-bj-blue/5 rounded-lg">
+                    <span class="text-xs font-medium text-bj-blue">${idx+1}</span>
+                    <span class="text-sm flex-1">${spot.name}</span>
+                    <span class="text-xs text-gray-400">${(spot.tags && spot.tags[0]) || spot.category || '景点'}</span>
+                    <button onclick="removeSpot(${idx})" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+                </div>
+            `).join('');
+        }
+        
+        function removeSpot(idx) {
+            selectedSpots.splice(idx, 1);
+            updateSelectedSpotsUI();
+        }
+        
+        // ==================== 文旅活动 ====================
+        
+        const activitiesData = [
+            { id: 1, title: '水立方暑期水上嘉年华', date: '2026年7月-8月', location: '国家游泳中心（水立方）', category: 'festival', price: '60-120元', tag: '水上活动', description: '国家游泳中心变身水上乐园，亲子戏水、水上闯关、夏日泳池派对等清凉消暑活动' },
+            { id: 2, title: '故宫博物院"纹以载道"特展', date: '2026年4月-8月', location: '故宫博物院', category: 'exhibition', price: '60元（含门票）', tag: '专题展览', description: '展示故宫珍藏的精美纹样文物，探寻中国传统装饰艺术之美' },
+            { id: 3, title: '古北水镇星空音乐季', date: '2026年7月-8月', location: '古北水镇', category: 'festival', price: '80-280元', tag: '夏夜活动', description: '长城脚下星空为幕，民谣、电子、摇滚等多元音乐现场，搭配夏日啤酒美食市集' },
+            { id: 4, title: '首都博物馆"北京记忆"常设展', date: '常设展览', location: '首都博物馆', category: 'exhibition', price: '免费', tag: '免费场馆', description: '全方位展示北京历史文化与发展变迁' },
+            { id: 5, title: '雁栖湖夏日嘉年华', date: '2026年7月-8月', location: '怀柔雁栖湖', category: 'festival', price: '45元', tag: '户外活动', description: '水上运动体验、湖畔音乐派对、亲子露营、星空电影等夏日消暑系列活动' },
+            { id: 6, title: '中国美术馆免费开放日', date: '每月第一个周日', location: '中国美术馆', category: 'free', price: '免费', tag: '免费开放', description: '每月首个周日免费参观，近距离欣赏大师真迹' },
+            { id: 7, title: '北京798艺术区夏日艺术季', date: '2026年6月-8月', location: '798艺术区', category: 'exhibition', price: '免费', tag: '艺术展览', description: '画廊联展、公共艺术装置、创意市集、艺术工作坊等丰富多彩的活动' },
+            { id: 8, title: '京郊避暑文化节', date: '2026年7月-8月', location: '延庆、怀柔等京郊景区', category: 'festival', price: '部分免费', tag: '避暑活动', description: '京郊避暑胜地联动，推出山水音乐会、星空露营、民俗体验等夏季文旅套餐' },
+            { id: 9, title: '朝阳公园荷花节暨夏日游园会', date: '2026年7月-8月', location: '朝阳公园', category: 'festival', price: '5元', tag: '自然景观', description: '荷花满塘、游船赏荷、民俗文化表演、特色美食市集，感受夏日园林之美' },
+            { id: 10, title: '首钢园·科幻电竞潮玩节', date: '2026年7月-8月', location: '首钢园', category: 'show', price: '30-80元', tag: '数字娱乐', description: '首钢工业遗址变身赛博空间，电竞赛事、VR体验、潮流市集、科幻装置艺术展' },
+            { id: 11, title: '天坛公园全民健身月', date: '2026年8月', location: '天坛公园', category: 'free', price: '免费', tag: '免费开放', description: '太极拳教学、传统武术表演、晨跑活动等全民健身体验项目' },
+            { id: 12, title: '后海音乐啤酒节', date: '2026年7月-8月', location: '什刹海后海', category: 'festival', price: '免费入场', tag: '夏季活动', description: '后海湖畔音乐live演出、精酿啤酒品鉴、夏日美食夜市，尽享北京夏夜风情' }
+        ];
+        
+        function initActivities() { renderActivities('all'); }
+        
+        function renderActivities(filter) {
+            const grid = document.getElementById('activities-grid');
+            const filtered = filter === 'all' ? activitiesData : activitiesData.filter(a => a.category === filter);
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-8 text-gray-400"><i data-lucide="calendar-x" class="w-12 h-12 mx-auto mb-4 opacity-50"></i><p>暂无相关活动</p></div>`;
+            } else {
+                grid.innerHTML = filtered.map(activity => `
+                    <div class="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-hover transition-all cursor-pointer card-hover">
+                        <div class="flex items-start justify-between mb-3">
+                            <span class="px-2 py-1 bg-${getCategoryColor(activity.category)}/10 text-${getCategoryColor(activity.category)} text-xs rounded-lg">${activity.tag}</span>
+                            <span class="text-sm font-medium ${activity.price === '免费' ? 'text-jade' : 'text-bj-blue'}">${activity.price}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 mb-2 line-clamp-2">${activity.title}</h3>
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-4 h-4"></i>${activity.date}</span>
+                            <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-4 h-4"></i>${activity.location}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-3 line-clamp-2">${activity.description}</p>
+                    </div>`).join('');
+            }
+            lucide.createIcons();
+        }
+        
+        function getCategoryColor(category) {
+            const colors = { 'show': 'purple', 'exhibition': 'blue', 'festival': 'orange', 'free': 'jade' };
+            return colors[category] || 'gray';
+        }
+        
+        function filterActivities(filter, element) {
+            document.querySelectorAll('.activity-filter').forEach(btn => {
+                btn.classList.remove('bg-bj-blue', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            element.classList.remove('bg-gray-100', 'text-gray-600');
+            if (filter !== 'free') element.classList.add('bg-bj-blue', 'text-white');
+            renderActivities(filter);
+        }
+        
+        // ==================== 数据可视化 ====================
+        
+        const hotRankingData = [
+            { name: '故宫博物院', heat: 98 },
+            { name: '八达岭长城', heat: 95 },
+            { name: '颐和园', heat: 88 },
+            { name: '天坛公园', heat: 82 },
+            { name: '国家博物馆', heat: 78 },
+            { name: '北海公园', heat: 72 },
+            { name: '圆明园遗址', heat: 68 },
+            { name: '中国科技馆', heat: 65 },
+            { name: '雍和宫', heat: 62 },
+            { name: '恭王府', heat: 58 }
+        ];
+        
+        function initHotRanking() {
+            const container = document.getElementById('hot-ranking');
+            container.innerHTML = hotRankingData.map((item, index) => {
+                const spot = attractionsData.find(a => a.name === item.name);
+                const clickHandler = spot ? `showAttractionDetail('${spot.id}')` : '';
+                return `
+                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors ${clickHandler ? 'cursor-pointer' : ''}" ${clickHandler ? `onclick="${clickHandler}"` : ''}>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${index < 3 ? 'bg-bj-gold/20 text-bj-gold-dark' : 'bg-gray-100 text-gray-600'}">${index + 1}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-gray-800 truncate">${item.name}</div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-bj-blue to-bj-gold rounded-full" style="width: ${item.heat}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        let chartInstance = null;
+        
+        function initChart(type) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            
+            if (type === 'heatmap') {
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['故宫', '长城', '颐和园', '天坛', '国家博物馆', '北海', '圆明园', '科技馆'],
+                        datasets: [{ label: '热度指数', data: [98, 95, 88, 82, 78, 72, 68, 65], backgroundColor: 'rgba(30, 58, 95, 0.8)', borderRadius: 6 }]
+                    },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#9CA3AF' } }, y: { grid: { display: false }, ticks: { color: '#5A6270', font: { size: 12 } }, barThickness: 22 } } }
+                });
+            } else if (type === 'type') {
+                chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['人文古迹', '博物馆', '自然风光', '现代地标', '网红打卡'],
+                        datasets: [{ data: [35, 20, 18, 15, 12], backgroundColor: ['#1E3A5F', '#2D5A8B', '#C9A962', '#B8383B', '#2E8B57'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { color: '#5A6270', usePointStyle: true, padding: 15 } } } }
+                });
+            }
+        }
+        
+        function switchChart(type, element) {
+            document.querySelectorAll('.chart-tab').forEach(btn => { btn.classList.remove('bg-bj-blue', 'text-white'); btn.classList.add('bg-gray-100', 'text-gray-600'); });
+            element.classList.remove('bg-gray-100', 'text-gray-600');
+            element.classList.add('bg-bj-blue', 'text-white');
+            currentChartType = type;
+            initChart(type);
+        }
+        
+        // ==================== 工具函数 ====================
+        
+        function toggleModule(moduleId) {
+            const module = document.getElementById(moduleId);
+            const icon = document.getElementById(moduleId + '-icon');
+            if (module.classList.contains('hidden')) {
+                module.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                module.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        
+        function initScrollSpy() {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    if (window.scrollY >= section.offsetTop - 100) current = section.getAttribute('id');
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('text-bj-blue', 'font-bold');
+                    if (link.getAttribute('href') === '#' + current) link.classList.add('text-bj-blue', 'font-bold');
+                });
+            });
+        }
+        
+        function showModal(title, content) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').innerHTML = content;
+            document.getElementById('modal').classList.add('active');
+            lucide.createIcons();
+        }
+        
+        function closeModal() { document.getElementById('modal').classList.remove('active'); }
+        document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+        
+        function showWeather() {
+            showModal('☀️ 北京今日天气', `
+                <div class="text-center py-4"><div class="text-6xl mb-2">☀️</div><div class="text-4xl font-bold text-bj-blue">24°C</div><div class="text-gray-500">晴 · 空气质量良</div></div>
+                <div class="grid grid-cols-4 gap-2 text-center text-sm my-4">
+                    <div class="p-2 bg-gray-50 rounded-lg"><div class="text-gray-500">上午</div><div class="text-xl">☀️</div><div>22°</div></div>
+                    <div class="p-2 bg-gray-50 rounded-lg"><div class="text-gray-500">下午</div><div class="text-xl">🌤</div><div>26°</div></div>
+                    <div class="p-2 bg-gray-50 rounded-lg"><div class="text-gray-500">傍晚</div><div class="text-xl">🌅</div><div>23°</div></div>
+                    <div class="p-2 bg-gray-50 rounded-lg"><div class="text-gray-500">夜间</div><div class="text-xl">🌙</div><div>18°</div></div>
+                </div>
+                <div class="text-sm text-gray-600 bg-blue-50 rounded-lg p-3"><p><strong>出行建议：</strong>今日天气晴朗，适宜户外活动。建议携带薄外套，早晚温差较大。</p></div>`);
+        }
+        
+        function showTraffic() {
+            showModal('🚌 北京交通指南', `
+                <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-xl p-4"><h4 class="font-medium text-bj-blue mb-2 flex items-center gap-2"><i data-lucide="subway" class="w-4 h-4"></i>地铁出行</h4><p class="text-sm text-gray-600">推荐使用亿通行或北京一卡通APP扫码乘车。1号线：故宫、天安门；4号线：颐和园、圆明园。</p></div>
+                    <div class="bg-gray-50 rounded-xl p-4"><h4 class="font-medium text-bj-blue mb-2 flex items-center gap-2"><i data-lucide="bus" class="w-4 h-4"></i>公交出行</h4><p class="text-sm text-gray-600">德胜门877路直达八达岭长城，前门旅游专线连接各大景点。</p></div>
+                </div>`);
+        }
+        
+        function showEmergency() {
+            showModal('📞 紧急联系电话', `
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg"><span class="font-medium text-red-700">报警电话</span><span class="text-xl font-bold text-red-600">110</span></div>
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg"><span class="font-medium text-blue-700">急救电话</span><span class="text-xl font-bold text-blue-600">120</span></div>
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg"><span class="font-medium text-green-700">火灾报警</span><span class="text-xl font-bold text-green-600">119</span></div>
+                    <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg"><span class="font-medium text-yellow-700">旅游投诉</span><span class="text-lg font-bold text-yellow-600">12345</span></div>
+                </div>`);
+        }
+        
+        function showFAQ() {
+            showModal('❓ 常见问题', `
+                <div class="space-y-4">
+                    <details class="group bg-gray-50 rounded-lg p-4"><summary class="font-medium cursor-pointer flex items-center justify-between">故宫门票如何预约？<i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform"></i></summary><p class="text-sm text-gray-600 mt-2 pt-2 border-t border-gray-200">通过故宫博物院官方微信公众号、官方网站或美团/携程等合作平台提前7天预约。</p></details>
+                    <details class="group bg-gray-50 rounded-lg p-4"><summary class="font-medium cursor-pointer flex items-center justify-between">北京最佳旅游季节？<i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform"></i></summary><p class="text-sm text-gray-600 mt-2 pt-2 border-t border-gray-200">春秋两季最佳（4-5月、9-10月），气候宜人，景色优美。</p></details>
+                    <details class="group bg-gray-50 rounded-lg p-4"><summary class="font-medium cursor-pointer flex items-center justify-between">三日游预算多少？<i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform"></i></summary><p class="text-sm text-gray-600 mt-2 pt-2 border-t border-gray-200">经济游约800-1000元/人，品质游约1500-2000元/人。</p></details>
+                </div>`);
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
