@@ -8,7 +8,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # 安装依赖
-RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install --no-cache-dir -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
 
 # 将项目所有文件复制到工作目录
 COPY . .
