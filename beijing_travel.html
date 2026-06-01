@@ -352,13 +352,6 @@
                 <!-- 右侧操作 -->
                 <div class="flex items-center gap-4">
                     <!-- 实时时间 -->
-                    <div id="current-time" class="hidden md:block text-right">
-                        <div class="text-lg font-mono font-bold text-bj-blue"></div>
-                        <div class="text-xs text-gray-400"></div>
-                    </div>
-                    <button onclick="scrollToTop()" class="p-2 rounded-lg hover:bg-gray-100 transition-colors tooltip" data-tooltip="返回顶部">
-                        <i data-lucide="arrow-up" class="w-5 h-5 text-gray-600"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -824,7 +817,6 @@
             initHotRanking();
             initChart('heatmap');
             initScrollSpy();
-            startRealtimeUpdates(); // 启动实时数据更新
         });
         
         // ==================== 全局变量 ====================
@@ -846,139 +838,7 @@
         let speechSynth = window.speechSynthesis;
         let currentUtterance = null;
         
-        // ==================== 实时数据更新系统 ====================
-        
-        function startRealtimeUpdates() {
-            // 实时更新景点热度
-            setInterval(() => {
-                updateAttractionHeat();
-            }, 10000); // 每10秒更新一次
-            
-            // 实时更新天气信息
-            updateWeatherInfo();
-            setInterval(() => {
-                updateWeatherInfo();
-            }, 60000); // 每分钟更新天气
-            
-            // 实时更新时间显示
-            updateCurrentTime();
-            setInterval(() => {
-                updateCurrentTime();
-            }, 1000); // 每秒更新时间
-        }
-        
-        function updateAttractionHeat() {
-            // 热度数据随机波动
-            hotRankingData.forEach(item => {
-                const change = (Math.random() - 0.5) * 5;
-                item.heat = Math.max(60, Math.min(100, item.heat + change));
-            });
-            
-            // 重新渲染热度排行 - 只显示景点名称
-            const container = document.getElementById('hot-ranking');
-            if (container) {
-                container.innerHTML = hotRankingData.map((item, index) => `
-                    <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="showHotRankingDetail('${item.name}')">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${index < 3 ? 'bg-bj-gold/20 text-bj-gold-dark' : 'bg-gray-100 text-gray-600'}">${index + 1}</div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-medium text-gray-800 truncate">${item.name}</div>
-                        </div>
-                    </div>`).join('');
-            }
-        }
-        
-        async function updateWeatherInfo() {
-            try {
-                const weatherPrompt = `请生成北京当前（2026年5月）的实时天气预报数据，包括：温度、体感温度、天气状况（晴天/多云/小雨等）、湿度、空气质量指数(AQI)和风向风力。请以JSON格式返回，不要加任何额外说明，格式：{"temp":28,"feels_like":30,"desc":"晴","icon":"☀️","humidity":45,"aqi":62,"wind":"南风3级"}`;
-                
-                const reply = await callDoubaoAPI(
-                    [{ role: 'user', content: weatherPrompt }],
-                    '你是一个天气数据生成助手，根据北京2026年5月的典型天气特点，生成合理的实时天气数据。'
-                );
-                
-                let weather;
-                try {
-                    weather = JSON.parse(reply);
-                } catch {
-                    // 如果AI返回的不是纯JSON，尝试提取
-                    const jsonMatch = reply.match(/\{[\s\S]*\}/);
-                    weather = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-                }
-                
-                if (!weather) throw new Error('解析失败');
-                
-                const weatherEl = document.getElementById('weather-info');
-                if (weatherEl) {
-                    weatherEl.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl">${weather.icon || '☀️'}</span>
-                            <div>
-                                <div class="text-xl font-bold text-gray-800">${weather.temp}°C</div>
-                                <div class="text-xs text-gray-500">${weather.desc}</div>
-                            </div>
-                            <div class="ml-auto text-right">
-                                <div class="text-xs ${weather.aqi <= 50 ? 'text-green-500' : weather.aqi <= 100 ? 'text-yellow-500' : 'text-red-500'}">AQI ${weather.aqi}</div>
-                                <div class="text-xs text-gray-400">空气质量${weather.aqi <= 50 ? '优' : weather.aqi <= 100 ? '良' : '一般'}</div>
-                            </div>
-                        </div>
-                        <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                            <span>🌡️ 体感 ${weather.feels_like || weather.temp}°C</span>
-                            <span>💧 湿度 ${weather.humidity || 50}%</span>
-                            <span>🌬️ ${weather.wind || '南风2级'}</span>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-400 text-center">
-                            更新于 ${new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})}
-                        </div>`;
-                }
-            } catch (error) {
-                console.log('天气API调用失败，使用备用数据');
-                updateLocalWeather();
-            }
-        }
-        
-        function updateLocalWeather() {
-            const weatherData = [
-                { temp: Math.floor(Math.random() * 10) + 20, desc: '晴', icon: '☀️', aqi: Math.floor(Math.random() * 50) + 30 },
-                { temp: Math.floor(Math.random() * 8) + 18, desc: '多云', icon: '⛅', aqi: Math.floor(Math.random() * 40) + 40 },
-                { temp: Math.floor(Math.random() * 6) + 22, desc: '晴间多云', icon: '🌤️', aqi: Math.floor(Math.random() * 30) + 35 }
-            ];
-            
-            const weather = weatherData[Math.floor(Math.random() * weatherData.length)];
-            const weatherEl = document.getElementById('weather-info');
-            
-            if (weatherEl) {
-                weatherEl.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="text-3xl">${weather.icon}</span>
-                        <div>
-                            <div class="text-xl font-bold text-gray-800">${weather.temp}°C</div>
-                            <div class="text-xs text-gray-500">${weather.desc}</div>
-                        </div>
-                        <div class="ml-auto text-right">
-                            <div class="text-xs ${weather.aqi <= 50 ? 'text-green-500' : weather.aqi <= 100 ? 'text-yellow-500' : 'text-red-500'}">AQI ${weather.aqi}</div>
-                            <div class="text-xs text-gray-400">空气质量良</div>
-                        </div>
-                    </div>
-                    <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                        <span>🌡️ 体感 ${weather.temp + Math.floor(Math.random() * 3)}°C</span>
-                        <span>💧 湿度 ${Math.floor(Math.random() * 30) + 40}%</span>
-                    </div>`;
-            }
-        }
-        
-        function updateCurrentTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
-            const dateStr = now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
-            
-            const timeEl = document.getElementById('current-time');
-            if (timeEl) {
-                timeEl.innerHTML = `
-                    <div class="text-2xl font-mono font-bold text-bj-blue">${timeStr}</div>
-                    <div class="text-xs text-gray-500">${dateStr}</div>
-                `;
-            }
-        }
+
         
         // ==================== AI智能问答系统 ====================
         
